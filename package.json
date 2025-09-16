@@ -18,7 +18,12 @@
   },
   "packageManager": "yarn@1.22.22",
   "workspaces": [
-    "apps/*",
+    "apps/client/*",
+    "apps/server/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "axios-cookiejar-support": "^6.0.4",
+    "tough-cookie": "^5.1.2"
+  }
 }

@@ -1,0 +1,19 @@
+{
+    "name": "@workspace/utils",
+    "version": "0.0.0",
+    "scripts": {
+        "auth:generate": "npx @better-auth/cli@latest generate --yes --config ./src/lib/better-auth/better-auth-server.ts --output ./prisma/schema/auth.prisma"
+    },
+    "dependencies": {
+        "@workspace/typescript-config": "*",
+        "nodemailer": "^7.0.5"
+    },
+    "devDependencies": {
+        "@types/nodemailer": "^6.4.17"
+    },
+    "exports": {
+        "./*": "./src/*.ts",
+        "./auth/*": "./src/auth/*.ts",
+        "./types/*": "./src/types/*.ts"
+    }
+}

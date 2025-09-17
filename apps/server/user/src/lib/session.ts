@@ -1,6 +1,7 @@
 import session from 'express-session';
 import { PrismaSessionStore } from './prisma-session-store';
 import { prisma } from '../config/database';
+import { env } from '@workspace/utils';
 
 // Create session store instance
 const sessionStore = new PrismaSessionStore(prisma);
@@ -12,14 +13,14 @@ setInterval(() => {
 
 export const sessionOptions = session({
     store: sessionStore,
-    secret: process.env.SESSION_SECRET || 'your-fallback-secret-key',
+    secret: env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        secure: env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true, // Prevent XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     },
-    name: 'sessionId', // Don't use default session name
+    name: env.SESSION_NAME
 });

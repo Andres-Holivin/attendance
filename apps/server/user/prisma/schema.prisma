@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/user-client"
 }
 
 datasource db {
@@ -18,6 +19,7 @@ model User {
   position  String?
   image_url String?
   phone     String?
+  role      UserRole @default(STAFF)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -44,7 +46,6 @@ model Session {
 }
 
 enum UserRole {
-  USER
+  STAFF
   ADMIN
-  MODERATOR
 }

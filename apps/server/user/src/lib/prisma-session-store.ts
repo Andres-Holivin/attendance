@@ -1,5 +1,5 @@
 import { Store } from 'express-session';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/user-client';
 
 export class PrismaSessionStore extends Store {
     private prisma: PrismaClient;

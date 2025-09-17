@@ -2,24 +2,13 @@
 
 import { useState } from 'react'
 
-import {  CalendarIcon } from 'lucide-react'
-import { Label } from './label'
+import { CalendarIcon } from 'lucide-react'
 import { Input } from './input'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { Button } from './button'
 import { Calendar } from './calendar'
+import moment from 'moment'
 
-function formatDate(date: Date | undefined) {
-  if (!date) {
-    return ''
-  }
-
-  return date.toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
-}
 
 function isValidDate(date: Date | undefined) {
   if (!date) {
@@ -29,11 +18,11 @@ function isValidDate(date: Date | undefined) {
   return !isNaN(date.getTime())
 }
 
-export const DatePickerInput = ({onChange}: {onChange: (date: Date | undefined) => void}) => {
+export const DatePickerInput = ({ onChange }: { onChange: (date: Date | undefined) => void }) => {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [month, setMonth] = useState<Date | undefined>(date)
-  const [value, setValue] = useState(formatDate(date))
+  const [value, setValue] = useState(moment(date).format('DD-MM-YYYY'))
 
   return (
     <div className='w-full max-w-xs space-y-2'>
@@ -72,10 +61,15 @@ export const DatePickerInput = ({onChange}: {onChange: (date: Date | undefined) 
               mode='single'
               selected={date}
               month={month}
-              onMonthChange={setMonth}
+              onMonthChange={setMonth}         
+              captionLayout='dropdown'
+              fixedWeeks
+              showOutsideDays
+              ISOWeek
+              
               onSelect={date => {
                 setDate(date)
-                setValue(formatDate(date))
+                setValue(moment(date).format('DD-MM-YYYY'))
                 setOpen(false)
                 onChange(date)
               }}

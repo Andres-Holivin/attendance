@@ -38,7 +38,27 @@ export const AuthService = {
     },
 
     updateProfile: async (data: UpdateProfileData): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).put('/auth/profile', data)
+        const formData = new FormData()
+
+        // Add form fields
+        if (data.phoneNumber) {
+            formData.append('phoneNumber', data.phoneNumber)
+        }
+        if (data.password) {
+            formData.append('password', data.password)
+        }
+        if (data.confirmPassword) {
+            formData.append('confirmPassword', data.confirmPassword)
+        }
+        if (data.profileImage) {
+            formData.append('profileImage', data.profileImage)
+        }
+
+        const response = await API(APIUrlEnum.USER_API).put('/auth/profile', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
         return response.data
     },
 

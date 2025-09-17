@@ -1,4 +1,4 @@
-// Type declarations for Express session and user
+// Base Express session and user type declarations
 declare global {
     namespace Express {
         interface User {
@@ -18,9 +18,13 @@ declare global {
     }
 }
 
-// Extend session data
+// Extend session data with user service specific properties
 declare module 'express-session' {
     interface SessionData {
+        userId?: string;
+        loginTime?: string;
+        userAgent?: string;
+        visitCount?: number;
         passport?: {
             user?: string;
         };

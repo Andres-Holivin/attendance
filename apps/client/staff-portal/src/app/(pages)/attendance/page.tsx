@@ -6,10 +6,25 @@ import { useEffect, useState } from "react";
 import { Hourglass, LogIn, LogOut } from "lucide-react";
 import Content from "@/components/content";
 import { Loading } from "@workspace/ui/components/custom/loading";
+import { useCheckIn, useCheckOut, useTodayAttendance } from "@/hooks/useAttendance";
+import { Spinner } from "@workspace/ui/components/spinner";
+import { FailedFetch } from "@workspace/ui/components/custom/failed-fetch";
 
 export default function AttendancePage() {
     const [dateTime, setDateTime] = useState('')
     const [timeZone, setTimeZone] = useState('')
+    const [duration, setDuration] = useState('')
+    const checkInMutation = useCheckIn()
+    const checkOutMutation = useCheckOut()
+
+    const { data, isPending, error, refetch } = useTodayAttendance()
+
+    // Refetch attendance data after successful check-in/check-out
+    useEffect(() => {
+        if (checkInMutation.isSuccess || checkOutMutation.isSuccess) {
+            refetch()
+        }
+    }, [checkInMutation.isSuccess, checkOutMutation.isSuccess, refetch])
 
     useEffect(() => {
         const tz = moment.tz.guess() // get browser time zone
@@ -21,12 +36,60 @@ export default function AttendancePage() {
 
         return () => clearInterval(interval)
     }, [])
-    if (!dateTime) {
-        return (
-            <Content>
-                <Loading />
-            </Content>
-        )
+
+    useEffect(() => {
+        if (!data?.data) {
+            setDuration('No attendance record')
+            return
+        }
+
+        const attendance = data.data
+        const dateIn = moment(attendance.dateIn)
+
+        const updateDuration = () => {
+            if (attendance.dateOut) {
+                // User has checked out - calculate fixed duration
+                const dateOut = moment(attendance.dateOut)
+                const diff = moment.duration(dateOut.diff(dateIn))
+                setDuration(`${Math.floor(diff.asHours())}h ${diff.minutes()}m ${diff.seconds()}s`)
+            } else {
+                // User is still checked in - calculate real-time duration
+                const now = moment()
+                const diff = moment.duration(now.diff(dateIn))
+                setDuration(`${Math.floor(diff.asHours())}h ${diff.minutes()}m ${diff.seconds()}s`)
+            }
+        }
+
+        updateDuration() // Initial calculation
+
+        // Update duration every second if user is still checked in
+        let durationInterval: NodeJS.Timeout | null = null
+        if (!attendance.dateOut) {
+            durationInterval = setInterval(updateDuration, 1000)
+        }
+
+        return () => {
+            if (durationInterval) {
+                clearInterval(durationInterval)
+            }
+        }
+    }, [data])
+
+    const getStatusText = () => {
+        if (!data?.data) return 'Not Checked In'
+        return data.data.dateOut ? 'Checked Out' : 'Checked In'
+    }
+
+    const getStatusColor = () => {
+        if (!data?.data) return 'text-gray-600'
+        return data.data.dateOut ? 'text-red-600' : 'text-green-600'
+    }
+
+    if (!dateTime || isPending) {
+        return (<Content><Loading /></Content>)
+    }
+    if (error) {
+        return (<Content><FailedFetch retry={refetch} message={error.message} /></Content>)
     }
     return (
         <Content className="flex justify-center items-center h-full md:flex-row flex-col space-x-0 md:space-x-14 md:space-y-0 space-y-8">
@@ -47,19 +110,28 @@ export default function AttendancePage() {
                 <div className="flex flex-col items-center mb-8 bg-muted rounded-full px-6 py-2 shadow">
                     <div className="flex gap-2">
                         Status:
-                        <div className="font-bold text-green-600">Checked Out</div>
+                        <div className={`font-bold ${getStatusColor()}`}>
+                            {getStatusText()}
+                        </div>
                     </div>
-                    <div>Duration: 8 hours</div>
+                    <div>Duration: {duration}</div>
                 </div>
                 <div className="text-2xl font-bold mb-4 text-center">Actions</div>
                 <div className="flex gap-8 mt-8">
-                    <Button className="flex flex-col items-center h-24 w-24">
+                    <Button className="flex flex-col items-center h-24 w-24"
+                        disabled={checkInMutation.isPending || !data?.data || data.data.dateIn}
+                        onClick={() => checkInMutation.mutate()}>
                         <LogIn className="size-8" />
                         Check In
+                        {checkInMutation.isPending && <Spinner />}
                     </Button>
-                    <Button className="flex flex-col items-center h-24 w-24">
+                    <Button className="flex flex-col items-center h-24 w-24"
+                        disabled={checkOutMutation.isPending || !data?.data || data.data.dateOut}
+                        onClick={() => checkOutMutation.mutate()}
+                    >
                         <LogOut className="size-8" />
                         Check Out
+                        {checkOutMutation.isPending && <Spinner />}
                     </Button>
                 </div>
 

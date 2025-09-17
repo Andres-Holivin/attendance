@@ -95,9 +95,13 @@ export function useUpdateProfile() {
         onSuccess: (response) => {
             if (response.success) {
                 toast.success('Profile updated successfully!', { id: idToastQuery })
+                // Update both profile and user data in cache
                 queryClient.setQueryData(AUTH_KEYS.profile, response)
                 queryClient.setQueryData(AUTH_KEYS.user, response)
-                // Invalidate session data as profile changes might affect it
+
+                // Invalidate all related queries to force refetch
+                queryClient.invalidateQueries({ queryKey: AUTH_KEYS.user })
+                queryClient.invalidateQueries({ queryKey: AUTH_KEYS.profile })
                 queryClient.invalidateQueries({ queryKey: AUTH_KEYS.session })
             }
         },

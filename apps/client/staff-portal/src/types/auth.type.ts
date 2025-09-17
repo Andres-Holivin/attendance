@@ -36,8 +36,8 @@ export interface LoginData {
 }
 
 export interface UpdateProfileData {
-    fullName?: string
-    position?: string
-    phone?: string
-    image_url?: string
+    phoneNumber?: string
+    password?: string
+    confirmPassword?: string
+    profileImage?: File
 }

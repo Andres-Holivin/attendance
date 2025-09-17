@@ -3,6 +3,7 @@
     "compilerOptions": {
         "declaration": false,
         "declarationMap": false,
+        "outDir": "./dist",
         "baseUrl": ".",
         "paths": {
             "@workspace/*": [

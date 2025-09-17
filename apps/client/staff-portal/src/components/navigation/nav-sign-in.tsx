@@ -8,14 +8,24 @@ import { Spinner } from "@workspace/ui/components/spinner";
 export function NavigationSignIn() {
     const { data } = useMe();
     const logOut = useLogout();
+    
     if (data?.data?.user) {
+        const user = data.data.user;
+        let userInitials = 'U';
+        
+        if (user.fullName) {
+            userInitials = user.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+        } else if (user.email && user.email.length > 0) {
+            userInitials = user.email[0]?.toUpperCase() || 'U';
+        }
+            
         return (
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
                         <Avatar className="h-8 w-8">
-                            <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-                            <AvatarFallback>JD</AvatarFallback>
+                            <AvatarImage src={user.image_url || undefined} alt={user.fullName} />
+                            <AvatarFallback>{userInitials}</AvatarFallback>
                         </Avatar>
                         <span className="sr-only">Toggle user menu</span>
                     </Button>
@@ -23,12 +33,12 @@ export function NavigationSignIn() {
                 <PopoverContent align="end" className="w-80">
                     <div className="flex flex-col items-center gap-4 p-4">
                         <Avatar className="h-20 w-20">
-                            <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-                            <AvatarFallback>JD</AvatarFallback>
+                            <AvatarImage src={user.image_url || undefined} alt={user.fullName} />
+                            <AvatarFallback>{userInitials}</AvatarFallback>
                         </Avatar>
                         <div className="grid gap-1 text-center">
-                            <div className="text-xl font-medium">John Doe</div>
-                            <div className="text-sm text-muted-foreground">john@example.com</div>
+                            <div className="text-xl font-medium">{user.fullName}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
                         </div>
                         <div className="grid w-full gap-2">
                             <Link

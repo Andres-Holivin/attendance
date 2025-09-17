@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Google Cloud Service Account Credentials
+google-account.json
+**/google-account.json

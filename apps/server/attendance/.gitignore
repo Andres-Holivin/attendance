@@ -32,3 +32,5 @@ Thumbs.db
 # Prisma
 prisma/migrations/
 .env
+
+google-account.json

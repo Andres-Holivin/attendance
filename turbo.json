@@ -35,6 +35,10 @@
         "CLOUDINARY_UPLOAD_FOLDER"
       ]
     },
+    "start": {    
+      "cache": false,
+      "persistent": true
+    },
     "lint": {
       "dependsOn": [
         "^lint"

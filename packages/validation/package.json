@@ -1,8 +1,13 @@
 {
     "name": "@workspace/validation",
     "version": "0.0.1",
-    "main": "index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch"
+    },
     "dependencies": {
         "zod": "^4.1.8"
     },
@@ -11,6 +16,7 @@
         "typescript": "^5.1.6"
     },
     "exports":{
-        "./*": "./src/*.ts"
+        ".": "./dist/index.js",
+        "./*": "./dist/*.js"
     }
 }

@@ -11,6 +11,9 @@ import {
   createGracefulShutdown,
   createHealthRoute,
   createRateLimiters,
+  createApiLoggingMiddleware,
+  create404Handler,
+  createErrorHandler,
   env,
   helmetOptions
 } from '@workspace/utils';
@@ -34,6 +37,9 @@ app.use(createCorsOptions(env.ALLOWED_ORIGINS))
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// API logging middleware - add after body parsing but before routes
+app.use(createApiLoggingMiddleware('user-service'));
+
 // Session configuration
 app.use(sessionOptions);
 
@@ -50,30 +56,10 @@ app.use('/health', createHealthRoute(prisma, env.NODE_ENV));
 app.use('/api/auth', authLimiter, authRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Endpoint not found',
-    error: 'NOT_FOUND',
-  });
-});
+app.use('*', create404Handler());
 
 // Global error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
-
-  // Don't send response if headers already sent
-  if (res.headersSent) {
-    return next(err);
-  }
-
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    error: err.code || 'INTERNAL_SERVER_ERROR',
-    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+app.use(createErrorHandler('user-service', env.NODE_ENV === 'development'));
 
 // Graceful shutdown
 

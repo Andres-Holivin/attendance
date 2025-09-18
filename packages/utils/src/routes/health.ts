@@ -8,7 +8,7 @@ type PrismaClientLike = {
 export function createHealthRoute(prisma: PrismaClientLike, environment: string) {
     const router = Router();
 
-    router.get('/health', async (req, res) => {
+    router.get('/', async (req, res) => {
         try {
             // Check database connection
             await prisma.$queryRaw`SELECT 1`;

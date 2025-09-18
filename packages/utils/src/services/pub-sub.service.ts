@@ -2,10 +2,12 @@ import { PubSub } from "@google-cloud/pubsub";
 
 export enum PubSubTopics {
     USER = 'user',
+    API_LOG = 'api-log',
 }
 
 export enum PubSubSubscriptions {
     USER_SERVICE_SUBSCRIPTION = 'user-service-subscription',
+    API_LOG_SUBSCRIPTION = 'api-log-subscription',
 }
 
 export function createPubSubService(pubSubClient: PubSub) {

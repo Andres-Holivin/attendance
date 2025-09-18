@@ -16,8 +16,9 @@
       ],
       "env": [
         "DATABASE_URL",
-        "SECRET",
-        "NEXT_PUBLIC_FRONTEND_URL"
+        "SECRET", 
+        "NEXT_PUBLIC_FRONTEND_URL",
+        "PORT"
       ]
     },
     "lint": {
@@ -32,7 +33,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["PORT"]
     },
     "db:generate": {
       "cache": false
@@ -48,6 +50,9 @@
       "persistent": true
     },
     "db:deploy": {
+      "cache": false
+    },
+    "db:push": {
       "cache": false
     }
   }

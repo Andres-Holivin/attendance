@@ -25,8 +25,16 @@ export const BeEnvValidationSchema = z.object({
     CLOUDINARY_AVATARS_FOLDER: z.string().default("attendance/avatars"),
 
     GOOGLE_PROJECT_ID: z.string().min(1, "GOOGLE_PROJECT_ID is required"),
-    GOOGLE_PUB_SUB_CREDENTIALS_PATH: z.string().min(1, "GOOGLE_PUB_SUB_CREDENTIALS_PATH is required"),
+    // Google Cloud Service Account Credentials - use either path or base64 encoded JSON
+    GOOGLE_PUB_SUB_CREDENTIALS_PATH: z.string().optional(),
+    GOOGLE_PUB_SUB_CREDENTIALS_BASE64: z.string().optional(),
 
     AUTH_RATE_LIMIT: z.coerce.number().default(1000),
     API_RATE_LIMIT: z.coerce.number().default(1000),
-})
+}).refine(
+    (data) => data.GOOGLE_PUB_SUB_CREDENTIALS_PATH || data.GOOGLE_PUB_SUB_CREDENTIALS_BASE64,
+    {
+        message: "Either GOOGLE_PUB_SUB_CREDENTIALS_PATH or GOOGLE_PUB_SUB_CREDENTIALS_BASE64 must be provided",
+        path: ["GOOGLE_PUB_SUB_CREDENTIALS_PATH"],
+    }
+)

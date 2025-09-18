@@ -11,6 +11,9 @@ export { createPrismaClient } from './lib/database';
 // Middleware utilities
 export { validate, checkValidationErrors } from './middleware/validation';
 export { createUploadMiddleware, upload, uploadSingle } from './middleware/upload';
+export { requireAuth, createRemoteAuthMiddleware } from './middleware/auth';
+export { createApiLoggingMiddleware, type ApiLogData } from './middleware/api-logging';
+export { create404Handler, createErrorHandler } from './middleware/error-handlers';
 
 // Config utilities
 export { createPubSubClient } from './config/pub-sub-client';

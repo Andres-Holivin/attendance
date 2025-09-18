@@ -1,8 +1,8 @@
-import { ComponentProps, useId } from "react";
+import { useId } from "react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-interface DotPatternProps extends ComponentProps<"svg"> {
+interface DotPatternProps {
   width?: number;
   height?: number;
   x?: number;
@@ -21,7 +21,6 @@ export function DotPattern({
   cy = 1,
   cr = 1,
   className,
-  ...props
 }: Readonly<DotPatternProps>) {
   const id = useId();
 
@@ -32,7 +31,6 @@ export function DotPattern({
         "pointer-events-none absolute inset-0 h-full w-full fill-neutral-400/80",
         className
       )}
-      {...props}
     >
       <defs>
         <pattern

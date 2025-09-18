@@ -1,0 +1,27 @@
+{
+  "extends": "@workspace/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "next.config.js",
+    ".next/types/**/*.ts", "../../../packages/ui/src/components/custom/chart-bar-interactive.tsx", "../../../packages/ui/src/components/custom/chart-pie-legend.tsx",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

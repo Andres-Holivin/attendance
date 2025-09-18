@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/logging-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model ApiLogging {
+  id        Int      @id @default(autoincrement())
+  
+  method    String
+  endpoint  String
+  status    Int
+  request   String?
+  response  String?
+  ip        String?
+  userAgent String?
+
+  // User and session information
+  userId    String?
+  userEmail String?
+  sessionId String?
+
+  timestamp DateTime @default(now()) 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("api_logging")
+}

@@ -5,7 +5,11 @@ import { createPubSubClient, createPubSubService, env } from '../index';
  * @returns PubSub client instance
  */
 export const createDefaultPubSubClient = () => {
-    return createPubSubClient(env.GOOGLE_PROJECT_ID, env.GOOGLE_PUB_SUB_CREDENTIALS_PATH);
+    return createPubSubClient(
+        env.GOOGLE_PROJECT_ID,
+        env.GOOGLE_PUB_SUB_CREDENTIALS_PATH,
+        env.GOOGLE_PUB_SUB_CREDENTIALS_BASE64
+    );
 };
 
 /**

@@ -4,18 +4,34 @@ import type { NextRequest } from "next/server";
 async function GetSessionAuth(req: NextRequest): Promise<boolean> {
     let isAuthenticated = false;
     try {
+        // Try different possible session cookie names
+        const sessionCookie = req.cookies.get('sessionId') || 
+                            req.cookies.get('connect.sid') || 
+                            req.cookies.get('session');
         const cookies = req.headers.get('cookie') || '';
+        
+        console.log('Middleware: All cookies from headers:', cookies);
+        console.log('Middleware: Session cookie from cookies API:', sessionCookie);
+        console.log('Middleware: All cookies from cookies API:', req.cookies.getAll());
 
         // Use local API route instead of direct backend call
         const apiUrl = new URL('/api/auth/me', req.url);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        // Build headers with cookies
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        
+        // Add cookies if available
+        if (cookies) {
+            headers['Cookie'] = cookies;
+        }
+        
         const response = await fetch(apiUrl, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': cookies,
-            },
+            headers,
             signal: controller.signal,
         });
 

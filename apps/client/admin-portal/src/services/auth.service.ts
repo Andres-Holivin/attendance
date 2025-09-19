@@ -19,8 +19,15 @@ export const AuthService = {
 
     // TEMPORARY: Use direct backend call for testing
     login: async (data: LoginData): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).post('/auth/login', data)
-        return response.data
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+            credentials: 'include',
+        });
+        return response.json();
     },
 
     // Use local API route - clears session cookie
@@ -37,9 +44,15 @@ export const AuthService = {
 
     // TEMPORARY: Use direct backend call for testing
     me: async (): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/me')
-        console.log('me response', response)
-        return response.data
+        const response = await fetch('/api/auth/me', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        console.log('me response', response);
+        return response.json();
     },
 
     // Use direct backend call - cookies are automatically sent by browser

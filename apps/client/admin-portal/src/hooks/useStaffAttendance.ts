@@ -6,7 +6,7 @@ import { AttendanceFilters } from '@/types/attendance.type'
 export const staffAttendanceKeys = {
     all: ['staff-attendance'] as const,
     staff: (staffId: string) => [...staffAttendanceKeys.all, 'staff', staffId] as const,
-    staffWithFilters: (staffId: string, filters: AttendanceFilters) => 
+    staffWithFilters: (staffId: string, filters: AttendanceFilters) =>
         [...staffAttendanceKeys.staff(staffId), 'filtered', filters] as const,
 }
 
@@ -15,7 +15,7 @@ export const staffAttendanceKeys = {
  */
 export function useStaffAttendanceRecords(filters: AttendanceFilters) {
     const staffId = filters.userId
-    
+
     return useQuery({
         queryKey: staffAttendanceKeys.staffWithFilters(staffId || '', filters),
         queryFn: () => {

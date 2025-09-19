@@ -21,6 +21,7 @@ export const sessionOptions = session({
         httpOnly: true, // Prevent XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: "none",
+        domain: env.NODE_ENV === 'production' ? ".vercel.app" : undefined, // Set domain in production
     },
     name: env.SESSION_NAME,
     proxy: env.NODE_ENV === 'production', // Trust the proxy in production

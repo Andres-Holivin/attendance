@@ -40,3 +40,5 @@ yarn-error.log*
 # Google Cloud Service Account Credentials
 google-account.json
 **/google-account.json
+firebase-service-account.json
+**/firebase-service-account.json

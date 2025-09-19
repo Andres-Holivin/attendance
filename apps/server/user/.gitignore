@@ -34,3 +34,4 @@ prisma/migrations/
 .env
 
 google-account.json
+firebase-service-account.json

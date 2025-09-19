@@ -20,7 +20,7 @@ export const sessionOptions = session({
         secure: env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true, // Prevent XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: "none"
     },
-    name: env.SESSION_NAME
+    name: env.SESSION_NAME,
 });

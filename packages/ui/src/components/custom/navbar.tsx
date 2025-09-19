@@ -40,7 +40,7 @@ export const Navbar = (props: NavbarProps) => {
 
           <div className="flex items-center gap-3">
             <ModeToggle />
-            {props.notification}
+            {/* {props.notification} */}
             <div className="hidden md:block">
               {props.signIn}
             </div>

@@ -6,16 +6,15 @@ async function GetSessionAuth(req: NextRequest): Promise<boolean> {
     try {
         const cookies = req.headers.get('cookie') || '';
 
-        // Use server-side environment variable (not NEXT_PUBLIC_)
-        const apiUrl = process.env.USER_API_URL || process.env.NEXT_PUBLIC_USER_API_URL || "http://localhost:3001";
+        // Use local API route instead of direct backend call
+        const apiUrl = new URL('/api/auth/me', req.url);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        const response = await fetch(`${apiUrl}/auth/me`, {
+        const response = await fetch(apiUrl, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Cookie': cookies,
-                'x-app-signature': "staff-portal"
             },
             signal: controller.signal,
         });

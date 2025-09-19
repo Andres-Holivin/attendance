@@ -120,6 +120,12 @@ export const AuthService = {
                     }
 
                     console.log(`✅ User ${user.email} logged in successfully with session ${req.sessionID}`);
+                    console.log('🍪 Session cookie settings check');
+                    console.log('📝 Session data:', JSON.stringify({
+                        sessionId: req.sessionID,
+                        userId: req.session.userId,
+                        loginTime: req.session.loginTime
+                    }));
 
                     res.json({
                         success: true,

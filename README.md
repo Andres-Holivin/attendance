@@ -63,9 +63,8 @@ This project follows a microservices architecture organized as a Turborepo monor
 - **UI Framework**: React 19
 - **Language**: TypeScript 5.9
 - **Styling**: Tailwind CSS 4
-- **UI Components**: Custom component library with Radix UI primitives
+- **UI Components**: Shadcn/ui
 - **HTTP Client**: Axios
-- **Authentication**: Firebase Auth
 - **Date Handling**: Moment.js, date-fns
 
 ### Backend
@@ -81,7 +80,7 @@ This project follows a microservices architecture organized as a Turborepo monor
 - **File Upload**: Multer with Cloudinary
 - **Message Queue**: Google Cloud Pub/Sub
 - **Event-Driven Architecture**: Pub/Sub topics for user events and API logging
-- **Validation**: Express Validator
+- **Validation**: Zod
 
 ### Shared Packages
 - **UI Components**: Custom design system with shadcn/ui
@@ -210,22 +209,6 @@ NEXT_PUBLIC_USER_SERVICE_URL=http://localhost:5001
 NEXT_PUBLIC_ATTENDANCE_SERVICE_URL=http://localhost:5002
 ```
 
-### 4. Google Cloud Pub/Sub Setup
-
-#### Create Topics and Subscriptions
-
-```bash
-# Set your Google Cloud project
-gcloud config set project YOUR_PROJECT_ID
-
-# Create topics
-gcloud pubsub topics create user
-gcloud pubsub topics create api-log
-
-# Create subscriptions
-gcloud pubsub subscriptions create user-service-subscription --topic=user
-gcloud pubsub subscriptions create api-log-subscription --topic=api-log
-```
 
 #### Service Account Setup
 

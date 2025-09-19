@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express';
 import passport, { use } from "passport";
 import { PubsubService, PubSubTopics } from "./pub-sub.service";
 import { env } from "@workspace/utils";
-import { handleImageUpload } from "@/lib/image-helper";
+import { handleImageUpload } from "../lib/image-helper";
 import { Prisma } from '@prisma/user-client';
 
 

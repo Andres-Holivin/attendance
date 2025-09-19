@@ -25,6 +25,8 @@ export const createRemoteAuthMiddleware = (userServiceUrl: string, requiredRole?
             // Extract session cookie from request
             const sessionCookie = req.headers.cookie;
 
+            console.log('Auth Middleware: Validating session with user service',
+                { sessionCookie, requiredRole });
             if (!sessionCookie) {
                 res.status(401).json({
                     success: false,
@@ -33,7 +35,6 @@ export const createRemoteAuthMiddleware = (userServiceUrl: string, requiredRole?
                 });
                 return;
             }
-
             // Validate session with user service
             const response = await axios.get(`${userServiceUrl}/api/auth/validate`, {
                 headers: {

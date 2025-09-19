@@ -11,7 +11,7 @@ import { DashboardAttendanceColumns } from "@/components/table-column/dashboard-
 import { useStaffAttendanceRecords } from "@/hooks/useStaffAttendance"
 import { useStaffById } from "@/hooks/useStaff"
 import Content from "@/components/content"
-import { AttendanceFilters } from "@/types/attendance.type"
+import { AttendanceFilters, AttendanceRecord } from "@/types/attendance.type"
 import { DatePickerRange } from "@workspace/ui/components/date-picker-range"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
@@ -55,7 +55,7 @@ export default function StaffAttendancePage() {
     const stats = useMemo(() => {
         const total = paginationData?.total || 0
         const present = attendanceRecords.length
-        const late = attendanceRecords.filter(record => {
+        const late = attendanceRecords.filter((record: AttendanceRecord) => {
             const checkInTime = new Date(record.dateIn)
             const workStartTime = new Date(checkInTime)
             workStartTime.setHours(8, 0, 0, 0) // Assuming work starts at 8 AM
@@ -68,7 +68,7 @@ export default function StaffAttendancePage() {
 
     const handleExport = () => {
         // Export attendance data to CSV
-        const csvData = attendanceRecords.map(record => ({
+        const csvData = attendanceRecords.map((record: AttendanceRecord) => ({
             Date: format(new Date(record.dateIn), "yyyy-MM-dd"),
             "Check In": format(new Date(record.dateIn), "HH:mm:ss"),
             "Check Out": record.dateOut ? format(new Date(record.dateOut), "HH:mm:ss") : "N/A",
@@ -77,7 +77,7 @@ export default function StaffAttendancePage() {
         
         const csvContent = [
             Object.keys(csvData[0] || {}).join(","),
-            ...csvData.map(row => Object.values(row).join(","))
+            ...csvData.map((row: any) => Object.values(row).join(","))
         ].join("\n")
         
         const blob = new Blob([csvContent], { type: "text/csv" })
@@ -85,7 +85,7 @@ export default function StaffAttendancePage() {
         const a = document.createElement("a")
         a.setAttribute("hidden", "")
         a.setAttribute("href", url)
-        a.setAttribute("download", `${staff.fullName}_attendance.csv`)
+        a.setAttribute("download", `${staff?.fullName || 'staff'}_attendance.csv`)
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)

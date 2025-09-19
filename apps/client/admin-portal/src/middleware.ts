@@ -5,11 +5,11 @@ async function GetSessionAuth(req: NextRequest): Promise<boolean> {
     let isAuthenticated = false;
     try {
         // Try different possible session cookie names
-        const sessionCookie = req.cookies.get('sessionId') || 
-                            req.cookies.get('connect.sid') || 
-                            req.cookies.get('session');
+        const sessionCookie = req.cookies.get('sessionId') ||
+            req.cookies.get('connect.sid') ||
+            req.cookies.get('session');
         const cookies = req.headers.get('cookie') || '';
-        
+
         console.log('Middleware: All cookies from headers:', cookies);
         console.log('Middleware: Session cookie from cookies API:', sessionCookie);
         console.log('Middleware: All cookies from cookies API:', req.cookies.getAll());
@@ -18,18 +18,18 @@ async function GetSessionAuth(req: NextRequest): Promise<boolean> {
         const apiUrl = process.env.USER_API_URL || process.env.NEXT_PUBLIC_USER_API_URL || "http://localhost:3002";
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        
+
         // Build headers with cookies
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'x-app-signature': 'admin-portal'
         };
-        
+
         // Add cookies if available
         if (cookies) {
             headers['Cookie'] = cookies;
         }
-        
+
         const response = await fetch(`${apiUrl}/auth/me`, {
             method: 'GET',
             headers,
@@ -57,37 +57,6 @@ export async function middleware(req: NextRequest) {
 
     // TEMPORARY: Disable middleware authentication for testing
     console.log(`Middleware: path=${pathname} - AUTHENTICATION DISABLED FOR TESTING`);
-    return NextResponse.next();
-
-    // Define public routes that don't require authentication
-    const publicPaths = ["/auth"];
-    // Check if the current path is public
-    const isPublicPath = pathname === "/" || publicPaths.some(path => pathname.startsWith(path + "/"));
-
-    let isAuthenticated = false;
-
-    // Only check authentication if we need to
-    if (!isPublicPath) {
-        isAuthenticated = await GetSessionAuth(req);
-    }
-
-    console.log(`Middleware: path=${pathname}, isPublic=${isPublicPath} , isAuth=${isAuthenticated}`);
-
-
-    if (isPublicPath === true && isAuthenticated === true) {
-        // Redirect authenticated users away from auth pages
-        const redirectTo = req.nextUrl.searchParams.get("redirect") || "/dashboard";
-        return NextResponse.redirect(new URL(redirectTo, req.url));
-    }
-
-    if (isPublicPath === false && isAuthenticated === false) {
-        // Redirect unauthenticated users to sign-in
-        const signInUrl = new URL("/auth/sign-in", req.url);
-        signInUrl.searchParams.set("redirect", pathname); // Save where they wanted to go
-        return NextResponse.redirect(signInUrl);
-    }
-
-    // Allow the request to continue
     return NextResponse.next();
 }
 

@@ -10,7 +10,7 @@ const envSchema = z.object({
     NEXT_PUBLIC_ATTENDANCE_API_URL: z.string().min(1, 'Attendance API URL is required'),
     NEXT_PUBLIC_LOGGING_API_URL: z.string().min(1, 'Logging API URL is required'),
 
-    NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().min(1, 'Firebase VAPID Key is required'),
+    // NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().min(1, 'Firebase VAPID Key is required'),
 });
 
 export const validateEnvServer = async () => await envSchema.safeParseAsync(process.env);

@@ -192,11 +192,12 @@ export const AuthService = {
                 }
 
                 // Clear session cookie
-                res.clearCookie('sessionId', {
+                res.clearCookie(env.SESSION_NAME || 'sessionId', {
                     path: '/',
                     httpOnly: true,
                     secure: env.NODE_ENV === 'production',
                     sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+                    domain: env.NODE_ENV === 'production' ? '.vercel.app' : undefined,
                 });
 
                 res.json({

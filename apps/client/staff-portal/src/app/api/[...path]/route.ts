@@ -231,9 +231,9 @@ async function processBackendResponse(backendResponse: Response): Promise<NextRe
  */
 async function handleApiProxyRequest(
     request: NextRequest,
-    context: { params: { path: string[] } }
+    context: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
-    const { path } = context.params;
+    const { path } = await context.params;
     const { searchParams } = new URL(request.url);
     const method = request.method;
 
@@ -282,30 +282,30 @@ async function handleApiProxyRequest(
 /**
  * HTTP method handlers - all use the same main handler
  */
-export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function POST(request: NextRequest, context: { params: { path: string[] } }) {
+export async function POST(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function PUT(request: NextRequest, context: { params: { path: string[] } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function DELETE(request: NextRequest, context: { params: { path: string[] } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function PATCH(request: NextRequest, context: { params: { path: string[] } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function HEAD(request: NextRequest, context: { params: { path: string[] } }) {
+export async function HEAD(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }
 
-export async function OPTIONS(request: NextRequest, context: { params: { path: string[] } }) {
+export async function OPTIONS(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
     return handleApiProxyRequest(request, context);
 }

@@ -56,7 +56,7 @@ export const LoggingService = {
       limit: limit.toString(),
       ...filters,
     };
-    
+
     const url = buildUrlWithParams('/logs', queryParams);
     const response = await api.get(url);
     return response.data;

@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * Configuration for backend services
  */
 const BACKEND_SERVICES = {
-  user: process.env.NEXT_PUBLIC_USER_API_URL,
-  attendance: process.env.NEXT_PUBLIC_ATTENDANCE_API_URL,
-  logging: process.env.NEXT_PUBLIC_LOGGING_API_URL,
+    user: process.env.NEXT_PUBLIC_USER_API_URL,
+    attendance: process.env.NEXT_PUBLIC_ATTENDANCE_API_URL,
+    logging: process.env.NEXT_PUBLIC_LOGGING_API_URL,
 } as const;
 
 /**
@@ -14,10 +14,10 @@ const BACKEND_SERVICES = {
  * Example: /api/auth/login → user service
  */
 const PATH_TO_SERVICE_MAP = {
-  auth: 'user',
-  users: 'user', 
-  attendance: 'attendance',
-  logs: 'logging',
+    auth: 'user',
+    users: 'user',
+    attendance: 'attendance',
+    logs: 'logging',
 } as const;
 
 type ServiceName = keyof typeof BACKEND_SERVICES;
@@ -29,10 +29,10 @@ type PathPrefix = keyof typeof PATH_TO_SERVICE_MAP;
  * @returns Service name or null if no mapping found
  */
 function determineTargetService(pathSegments: string[]): ServiceName | null {
-  if (pathSegments.length === 0) return null;
-  
-  const firstSegment = pathSegments[0] as PathPrefix;
-  return PATH_TO_SERVICE_MAP[firstSegment] || null;
+    if (pathSegments.length === 0) return null;
+
+    const firstSegment = pathSegments[0] as PathPrefix;
+    return PATH_TO_SERVICE_MAP[firstSegment] || null;
 }
 
 /**
@@ -43,28 +43,28 @@ function determineTargetService(pathSegments: string[]): ServiceName | null {
  * @returns Complete backend URL
  */
 function buildBackendUrl(
-  service: ServiceName, 
-  pathSegments: string[], 
-  searchParams: URLSearchParams
+    service: ServiceName,
+    pathSegments: string[],
+    searchParams: URLSearchParams
 ): string {
-  const baseUrl = BACKEND_SERVICES[service];
-  
-  if (!baseUrl) {
-    throw new Error(`Backend URL not configured for service: ${service}`);
-  }
+    const baseUrl = BACKEND_SERVICES[service];
 
-  // Remove trailing slash and build path
-  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-  const apiPath = pathSegments.join('/');
-  
-  // Add query parameters if present
-  let url = `${cleanBaseUrl}/${apiPath}`;
-  const queryString = searchParams.toString();
-  if (queryString) {
-    url += `?${queryString}`;
-  }
-  
-  return url;
+    if (!baseUrl) {
+        throw new Error(`Backend URL not configured for service: ${service}`);
+    }
+
+    // Remove trailing slash and build path
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const apiPath = pathSegments.join('/');
+
+    // Add query parameters if present
+    let url = `${cleanBaseUrl}/${apiPath}`;
+    const queryString = searchParams.toString();
+    if (queryString) {
+        url += `?${queryString}`;
+    }
+
+    return url;
 }
 
 /**
@@ -73,34 +73,34 @@ function buildBackendUrl(
  * @returns Headers object for backend request
  */
 function prepareBackendHeaders(request: NextRequest): Headers {
-  const headers = new Headers();
-  
-  // Headers to forward from client request
-  const headersToForward = [
-    'content-type',
-    'authorization',
-    'x-app-signature', // Important for backend service identification
-    'user-agent',
-  ];
+    const headers = new Headers();
 
-  // Copy specified headers
-  headersToForward.forEach((headerName) => {
-    const headerValue = request.headers.get(headerName);
-    if (headerValue) {
-      headers.set(headerName, headerValue);
+    // Headers to forward from client request
+    const headersToForward = [
+        'content-type',
+        'authorization',
+        'x-app-signature', // Important for backend service identification
+        'user-agent',
+    ];
+
+    // Copy specified headers
+    headersToForward.forEach((headerName) => {
+        const headerValue = request.headers.get(headerName);
+        if (headerValue) {
+            headers.set(headerName, headerValue);
+        }
+    });
+
+    // Forward cookies for session management
+    const cookies = request.headers.get('cookie');
+    if (cookies) {
+        headers.set('Cookie', cookies);
     }
-  });
 
-  // Forward cookies for session management
-  const cookies = request.headers.get('cookie');
-  if (cookies) {
-    headers.set('Cookie', cookies);
-  }
+    // Always identify requests as coming from staff portal
+    headers.set('X-App-Signature', 'staff-portal');
 
-  // Always identify requests as coming from staff portal
-  headers.set('X-App-Signature', 'staff-portal');
-
-  return headers;
+    return headers;
 }
 
 /**
@@ -110,34 +110,34 @@ function prepareBackendHeaders(request: NextRequest): Headers {
  * @returns Request body or undefined
  */
 async function prepareRequestBody(
-  request: NextRequest, 
-  method: string
+    request: NextRequest,
+    method: string
 ): Promise<BodyInit | undefined> {
-  // Only process body for methods that support it
-  if (!['POST', 'PUT', 'PATCH'].includes(method)) {
-    return undefined;
-  }
-
-  const contentType = request.headers.get('content-type');
-  
-  try {
-    if (contentType?.includes('application/json')) {
-      const jsonData = await request.json();
-      return JSON.stringify(jsonData);
-    } 
-    
-    if (contentType?.includes('multipart/form-data')) {
-      // FormData handling - let fetch handle the content-type boundary
-      return await request.formData();
+    // Only process body for methods that support it
+    if (!['POST', 'PUT', 'PATCH'].includes(method)) {
+        return undefined;
     }
-    
-    // Default: treat as text
-    return await request.text();
-    
-  } catch (error) {
-    console.error('Error processing request body:', error);
-    return undefined;
-  }
+
+    const contentType = request.headers.get('content-type');
+
+    try {
+        if (contentType?.includes('application/json')) {
+            const jsonData = await request.json();
+            return JSON.stringify(jsonData);
+        }
+
+        if (contentType?.includes('multipart/form-data')) {
+            // FormData handling - let fetch handle the content-type boundary
+            return await request.formData();
+        }
+
+        // Default: treat as text
+        return await request.text();
+
+    } catch (error) {
+        console.error('Error processing request body:', error);
+        return undefined;
+    }
 }
 
 /**
@@ -149,27 +149,27 @@ async function prepareRequestBody(
  * @returns Backend response
  */
 async function callBackendService(
-  targetUrl: string,
-  method: string, 
-  headers: Headers,
-  body?: BodyInit
+    targetUrl: string,
+    method: string,
+    headers: Headers,
+    body?: BodyInit
 ): Promise<Response> {
-  const requestOptions: RequestInit = {
-    method,
-    headers,
-    credentials: 'include',
-  };
+    const requestOptions: RequestInit = {
+        method,
+        headers,
+        credentials: 'include',
+    };
 
-  if (body) {
-    requestOptions.body = body;
-  }
+    if (body) {
+        requestOptions.body = body;
+    }
 
-  try {
-    return await fetch(targetUrl, requestOptions);
-  } catch (error) {
-    console.error('Backend service call failed:', error);
-    throw new Error(`Failed to connect to backend service: ${error}`);
-  }
+    try {
+        return await fetch(targetUrl, requestOptions);
+    } catch (error) {
+        console.error('Backend service call failed:', error);
+        throw new Error(`Failed to connect to backend service: ${error}`);
+    }
 }
 
 /**
@@ -178,49 +178,49 @@ async function callBackendService(
  * @returns Next.js response
  */
 async function processBackendResponse(backendResponse: Response): Promise<NextResponse> {
-  try {
-    // Get response content
-    const responseText = await backendResponse.text();
-    
-    // Try to parse as JSON, fallback to text
-    let responseData: any;
     try {
-      responseData = JSON.parse(responseText);
-    } catch {
-      responseData = responseText;
+        // Get response content
+        const responseText = await backendResponse.text();
+
+        // Try to parse as JSON, fallback to text
+        let responseData: any;
+        try {
+            responseData = JSON.parse(responseText);
+        } catch {
+            responseData = responseText;
+        }
+
+        // Create Next.js response with same status
+        const nextResponse = new NextResponse(JSON.stringify(responseData), {
+            status: backendResponse.status,
+            statusText: backendResponse.statusText,
+        });
+
+        // Forward all headers from backend (including cookies)
+        backendResponse.headers.forEach((value, key) => {
+            // Skip headers that Next.js manages automatically
+            const skipHeaders = ['content-length', 'transfer-encoding'];
+            if (!skipHeaders.includes(key.toLowerCase())) {
+                nextResponse.headers.set(key, value);
+            }
+        });
+
+        // Ensure JSON content type
+        nextResponse.headers.set('content-type', 'application/json');
+
+        return nextResponse;
+
+    } catch (error) {
+        console.error('Error processing backend response:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Error processing backend response',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            },
+            { status: 500 }
+        );
     }
-
-    // Create Next.js response with same status
-    const nextResponse = new NextResponse(JSON.stringify(responseData), {
-      status: backendResponse.status,
-      statusText: backendResponse.statusText,
-    });
-
-    // Forward all headers from backend (including cookies)
-    backendResponse.headers.forEach((value, key) => {
-      // Skip headers that Next.js manages automatically
-      const skipHeaders = ['content-length', 'transfer-encoding'];
-      if (!skipHeaders.includes(key.toLowerCase())) {
-        nextResponse.headers.set(key, value);
-      }
-    });
-
-    // Ensure JSON content type
-    nextResponse.headers.set('content-type', 'application/json');
-
-    return nextResponse;
-    
-  } catch (error) {
-    console.error('Error processing backend response:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Error processing backend response',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
 }
 
 /**
@@ -230,82 +230,82 @@ async function processBackendResponse(backendResponse: Response): Promise<NextRe
  * @returns Next.js response
  */
 async function handleApiProxyRequest(
-  request: NextRequest, 
-  context: { params: { path: string[] } }
+    request: NextRequest,
+    context: { params: { path: string[] } }
 ): Promise<NextResponse> {
-  const { path } = context.params;
-  const { searchParams } = new URL(request.url);
-  const method = request.method;
+    const { path } = context.params;
+    const { searchParams } = new URL(request.url);
+    const method = request.method;
 
-  console.log(`[Staff Portal API Proxy] ${method} /${path.join('/')}`);
+    console.log(`[Staff Portal API Proxy] ${method} /${path.join('/')}`);
 
-  try {
-    // Step 1: Determine which backend service to call
-    const targetService = determineTargetService(path);
-    if (!targetService) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: `No backend service configured for path: /${path.join('/')}` 
-        },
-        { status: 404 }
-      );
+    try {
+        // Step 1: Determine which backend service to call
+        const targetService = determineTargetService(path);
+        if (!targetService) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: `No backend service configured for path: /${path.join('/')}`
+                },
+                { status: 404 }
+            );
+        }
+
+        // Step 2: Build the complete backend URL
+        const backendUrl = buildBackendUrl(targetService, path, searchParams);
+        console.log(`[Staff Portal API Proxy] Forwarding to: ${backendUrl}`);
+
+        // Step 3: Prepare headers and body for backend request
+        const headers = prepareBackendHeaders(request);
+        const body = await prepareRequestBody(request, method);
+
+        // Step 4: Call the backend service
+        const backendResponse = await callBackendService(backendUrl, method, headers, body);
+
+        // Step 5: Process and return the response
+        return await processBackendResponse(backendResponse);
+
+    } catch (error) {
+        console.error('[Staff Portal API Proxy] Request failed:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Proxy request failed',
+                error: error instanceof Error ? error.message : 'Unknown error',
+            },
+            { status: 500 }
+        );
     }
-
-    // Step 2: Build the complete backend URL
-    const backendUrl = buildBackendUrl(targetService, path, searchParams);
-    console.log(`[Staff Portal API Proxy] Forwarding to: ${backendUrl}`);
-
-    // Step 3: Prepare headers and body for backend request
-    const headers = prepareBackendHeaders(request);
-    const body = await prepareRequestBody(request, method);
-
-    // Step 4: Call the backend service
-    const backendResponse = await callBackendService(backendUrl, method, headers, body);
-
-    // Step 5: Process and return the response
-    return await processBackendResponse(backendResponse);
-
-  } catch (error) {
-    console.error('[Staff Portal API Proxy] Request failed:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Proxy request failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
 }
 
 /**
  * HTTP method handlers - all use the same main handler
  */
 export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function POST(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function PUT(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function DELETE(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function PATCH(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function HEAD(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }
 
 export async function OPTIONS(request: NextRequest, context: { params: { path: string[] } }) {
-  return handleApiProxyRequest(request, context);
+    return handleApiProxyRequest(request, context);
 }

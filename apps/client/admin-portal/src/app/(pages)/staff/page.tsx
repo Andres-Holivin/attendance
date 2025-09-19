@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Plus, Search } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -20,6 +21,8 @@ import Content from "@/components/content"
 import { useDebouncedCallback } from "@workspace/ui/hooks/use-debounced-callback"
 
 export default function StaffPage() {
+    const router = useRouter()
+    
     // State for pagination and search
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
     const [searchQuery, setSearchQuery] = useState("")
@@ -94,10 +97,15 @@ export default function StaffPage() {
         setDeleteModalOpen(true)
     }
 
+    const openAttendanceDetails = (staff: User) => {
+        router.push(`/staff/${staff.id}/attendance`)
+    }
+
     // Table columns with event handlers
     const columns = createStaffColumns(
         openEditModal,
-        openDeleteModal
+        openDeleteModal,
+        openAttendanceDetails
     )
 
     const staffList = staffData?.data?.users || []

@@ -14,15 +14,17 @@ import ChartBarDashboard from "@/components/dashboard/chart-bar-dashboard";
 export default function DashboardPage() {
 
   // Use custom hooks for filter management
-  const { handleStartDateChange, handleEndDateChange } = useDateRangeFilter();
+  const { dateRange, handleStartDateChange, handleEndDateChange } = useDateRangeFilter();
   return (
     <Content className="space-y-6" title="Attendance Dashboard">
       <div className="flex items-center gap-2 flex-col md:flex-row ">
         <DatePickerInput
+          value={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
           onChange={handleStartDateChange}
         />
         <div> to </div>
         <DatePickerInput
+          value={dateRange.endDate ? new Date(dateRange.endDate) : undefined}
           onChange={handleEndDateChange}
         />
       </div>

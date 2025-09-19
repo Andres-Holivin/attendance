@@ -22,6 +22,12 @@ export const AttendanceService = {
         return api.get(url);
     },
 
+    getStaffAttendanceRecords: async (staffId: string, filters: AttendanceFilters = {}): Promise<BaseApiResponse & { data: AttendancePaginatedResponse }> => {
+        const filtersWithStaff = { ...filters, userId: staffId };
+        const url = buildUrlWithParams('/attendance', filtersWithStaff);
+        return api.get(url);
+    },
+
     getCombinedStats: async (filters?: { days?: number; startDate?: string; endDate?: string }): Promise<BaseApiResponse & { data: CombinedAttendanceStats }> => {
         const url = buildUrlWithParams('/attendance/stats', filters || {});
         return api.get(url);

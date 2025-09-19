@@ -10,6 +10,7 @@ export default function TopNav() {
         <Navbar
             navigationLinks={[
                 { href: "/dashboard", label: "Dashboard" },
+                {href: "/attendance", label: "Attendance" },
                 { href: "/staff", label: "Staff" },
             ]}
             logoHref={data?.data?.user ? "/dashboard" : "/"}

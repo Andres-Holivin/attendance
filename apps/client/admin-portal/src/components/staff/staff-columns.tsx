@@ -1,13 +1,12 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Edit, Trash2 } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
@@ -15,7 +14,11 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { User } from "@/types/user.type"
 
-export function createStaffColumns(onEdit: (staff: User) => void, onDelete: (staff: User) => void): ColumnDef<User>[] {
+export function createStaffColumns(
+    onEdit: (staff: User) => void, 
+    onDelete: (staff: User) => void,
+    onViewAttendance: (staff: User) => void
+): ColumnDef<User>[] {
     return [
         {
             accessorKey: "image_url",
@@ -124,6 +127,10 @@ export function createStaffColumns(onEdit: (staff: User) => void, onDelete: (sta
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onViewAttendance(staff)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Attendance
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => onEdit(staff)}>
                                 <Edit className="mr-2 h-4 w-4" />

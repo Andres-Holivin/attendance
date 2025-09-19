@@ -7,6 +7,7 @@ export const staffKeys = {
     all: ['staff'] as const,
     lists: () => [...staffKeys.all, 'list'] as const,
     list: (params: StaffListParams) => [...staffKeys.lists(), params] as const,
+    detail: (id: string) => [...staffKeys.all, 'detail', id] as const,
 }
 
 /**
@@ -17,6 +18,18 @@ export function useStaffList(params?: StaffListParams) {
         queryKey: staffKeys.list(params || {}),
         queryFn: () => staffService.getStaffList(params),
         staleTime: 5 * 60 * 1000, // 5 minutes
+    })
+}
+
+/**
+ * Hook for fetching a staff member by ID
+ */
+export function useStaffById(id: string) {
+    return useQuery({
+        queryKey: staffKeys.detail(id),
+        queryFn: () => staffService.getStaffById(id),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        enabled: !!id,
     })
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import { CalendarIcon } from 'lucide-react'
 import { Input } from './input'
@@ -18,11 +18,26 @@ function isValidDate(date: Date | undefined) {
   return !isNaN(date.getTime())
 }
 
-export const DatePickerInput = ({ onChange }: { onChange: (date: Date | undefined) => void }) => {
+export const DatePickerInput = ({ 
+  onChange, 
+  value: externalValue 
+}: { 
+  onChange: (date: Date | undefined) => void; 
+  value?: Date;
+}) => {
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [date, setDate] = useState<Date | undefined>(externalValue || new Date())
   const [month, setMonth] = useState<Date | undefined>(date)
-  const [value, setValue] = useState(moment(date).format('DD-MM-YYYY'))
+  const [value, setValue] = useState(moment(externalValue || date).format('DD-MM-YYYY'))
+
+  // Update internal state when external value changes
+  useEffect(() => {
+    if (externalValue) {
+      setDate(externalValue)
+      setMonth(externalValue)
+      setValue(moment(externalValue).format('DD-MM-YYYY'))
+    }
+  }, [externalValue])
 
   return (
     <div className='w-full max-w-xs space-y-2'>

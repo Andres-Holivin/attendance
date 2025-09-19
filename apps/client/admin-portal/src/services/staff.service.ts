@@ -49,6 +49,18 @@ export const staffService = {
     },
 
     /**
+     * Get a staff member by ID
+     */
+    async getStaffById(id: string): Promise<{ success: boolean; message: string; data: User }> {
+        try {
+            return await api.get(`/users/${id}`);
+        } catch (error: any) {
+            const errorMessage = error.message || 'Failed to fetch staff member'
+            throw new Error(errorMessage)
+        }
+    },
+
+    /**
      * Create a new staff member
      */
     async createStaff(data: CreateStaffData): Promise<{ success: boolean; message: string; data: User }> {

@@ -1,5 +1,6 @@
 import { prisma } from '../config/database';
 import moment from 'moment';
+import { Request, Response } from 'express';
 export interface CreateAttendanceData {
     userId: string;
     dateIn: Date;
@@ -18,6 +19,7 @@ export interface AttendanceFilters {
 export class AttendanceService {
     static async getAttendanceRecords(req: any, res: any): Promise<void> {
         try {
+            const appSource = req.appSource;
             const {
                 page = 1,
                 limit = 10,
@@ -33,8 +35,13 @@ export class AttendanceService {
             if (startDate) filters.startDate = new Date(startDate);
             if (endDate) filters.endDate = new Date(endDate);
 
-            filters.startDate = moment.utc(filters.startDate).startOf('day').toDate();
-            filters.endDate = moment.utc(filters.endDate).endOf('day').toDate();
+            filters.startDate = moment(filters.startDate).startOf('day').toDate();
+            filters.endDate = moment(filters.endDate).endOf('day').toDate();
+
+            if (appSource === 'staff-portal') {
+                // Staff can only see their own records
+                filters.userId = req.user?.id ?? "";
+            }
 
 
             console.log('Filtering statistics from', filters.startDate, 'to', filters.endDate);
@@ -59,9 +66,18 @@ export class AttendanceService {
         }
     }
 
-    static async getStats(req: any, res: any): Promise<void> {
+    static async getStats(req: Request, res: Response): Promise<void> {
         try {
-            const { days, startDate, endDate } = req.query;
+            const { days, startDate, endDate }: any = req.query;
+            const appSource = req.appSource;
+            if (appSource !== 'admin-portal' && appSource !== 'staff-portal') {
+                res.status(403).json({
+                    success: false,
+                    message: 'Access denied',
+                    error: 'FORBIDDEN',
+                });
+                return;
+            }
 
             // Determine date range
             let filterStartDate: Date;
@@ -78,17 +94,23 @@ export class AttendanceService {
                 filterStartDate.setDate(filterStartDate.getDate() - daysCount);
             }
 
-            filterStartDate = moment.utc(filterStartDate).startOf('day').toDate();
-            filterEndDate = moment.utc(filterEndDate).endOf('day').toDate();
+            filterStartDate = moment(filterStartDate).startOf('day').toDate();
+            filterEndDate = moment(filterEndDate).endOf('day').toDate();
 
             console.log('Filtering statistics from', filterStartDate, 'to', filterEndDate);
 
-            // Get total employees count
-            const totalEmployees = await prisma.user.count();
+            // For staff portal, filter by current user only
+            const userFilter = appSource === 'staff-portal' ? { id: req.user?.id ?? "" } : {};
 
-            // Get attendance records for the date range
+            // Get total employees count (for staff portal, it's just 1 - the current user)
+            const totalEmployees = await prisma.user.count({
+                where: userFilter
+            });
+
+            // Get attendance records for the date range with proper user filtering
             const attendanceRecords = await prisma.attendance.findMany({
                 where: {
+                    ...(appSource === 'staff-portal' ? { userId: req.user?.id } : {}),
                     dateIn: {
                         gte: filterStartDate,
                         lte: filterEndDate,
@@ -97,26 +119,67 @@ export class AttendanceService {
                 select: {
                     dateIn: true,
                     dateOut: true,
-                    user: {
-                        select: {
-                            id: true,
-                        }
-                    },
+                    userId: true,
                 }
             });
 
-            // Calculate summary statistics for the entire date range
-            const presentInRange = attendanceRecords.length;
-            const absentInRange = totalEmployees - presentInRange;
+            // For the selected period, calculate statistics differently based on app source
+            let presentInRange: number;
+            let absentInRange: number;
+            let lateInRange: number;
+            let onTimeInRange: number;
 
-            const lateInRange = attendanceRecords.filter(attendance => {
-                const checkInDate = new Date(attendance.dateIn);
-                const workStartTime = new Date(checkInDate);
-                workStartTime.setHours(9, 0, 0, 0);
-                return checkInDate > workStartTime;
-            }).length;
+            if (appSource === 'staff-portal') {
+                // For staff portal: count attendance days for the current user
+                presentInRange = attendanceRecords.length; // Number of days the user was present
 
-            const onTimeInRange = presentInRange - lateInRange;
+                // Calculate total working days in the date range
+                const totalWorkingDays = Math.ceil((filterEndDate.getTime() - filterStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                absentInRange = totalWorkingDays - presentInRange; // Days the user was absent
+
+                // Count late days
+                lateInRange = attendanceRecords.filter(attendance => {
+                    const checkInDate = new Date(attendance.dateIn);
+                    const workStartTime = new Date(checkInDate);
+                    workStartTime.setHours(9, 0, 0, 0);
+                    return checkInDate > workStartTime;
+                }).length;
+
+                onTimeInRange = presentInRange - lateInRange;
+            } else {
+                // For admin portal: calculate unique users and their attendance patterns
+                const uniqueUserIds = new Set(attendanceRecords.map(record => record.userId));
+                presentInRange = uniqueUserIds.size; // Number of unique users who attended during the period
+                const totalWorkingDays = Math.ceil((filterEndDate.getTime() - filterStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                console.log('Total working days in range:', totalWorkingDays);
+                console.log('Present days in range:', presentInRange);
+                console.log('Absent days in range:', totalEmployees);
+                absentInRange = (totalWorkingDays * totalEmployees) - presentInRange; // Users who never attended during the period
+
+                // Count unique users who were late (not total late instances)
+                const lateUserIds = new Set(
+                    attendanceRecords
+                        .filter(attendance => {
+                            const checkInDate = new Date(attendance.dateIn);
+                            const workStartTime = new Date(checkInDate);
+                            workStartTime.setHours(9, 0, 0, 0);
+                            return checkInDate > workStartTime;
+                        })
+                        .map(record => record.userId)
+                );
+
+                lateInRange = lateUserIds.size; // Number of unique users who were late during the period
+
+                // Count unique users who were on time (attended but never late)
+                const onTimeUserIds = new Set();
+                uniqueUserIds.forEach(userId => {
+                    if (!lateUserIds.has(userId)) {
+                        onTimeUserIds.add(userId);
+                    }
+                });
+
+                onTimeInRange = onTimeUserIds.size;
+            }
 
             const summaryStatistics = {
                 totalEmployees,
@@ -124,6 +187,10 @@ export class AttendanceService {
                 absentToday: absentInRange,
                 lateToday: lateInRange,
                 onTimeToday: onTimeInRange,
+                // Add period-specific metadata
+                periodStart: moment(filterStartDate).format('YYYY-MM-DD'),
+                periodEnd: moment(filterEndDate).format('YYYY-MM-DD'),
+                totalDaysInPeriod: Math.ceil((filterEndDate.getTime() - filterStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
             };
 
             // Calculate daily breakdown statistics

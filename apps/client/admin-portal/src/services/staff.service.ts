@@ -1,8 +1,6 @@
 import { PaginatedResponse } from "@/types/api.type"
 import { User } from "@/types/user.type"
-import { API, APIUrlEnum } from "@/lib/api"
-
-const userAPI = API(APIUrlEnum.USER_API)
+import { api, buildUrlWithParams } from "@/lib/proxy-api"
 
 export interface CreateStaffData {
     email: string
@@ -41,25 +39,13 @@ export const staffService = {
      * Get paginated list of staff members
      */
     async getStaffList(params?: StaffListParams): Promise<PaginatedResponse<StaffListResponse>> {
-        const queryParams = new URLSearchParams()
+        const queryParams = {
+            role: 'STAFF',
+            ...params,
+        };
 
-        if (params?.page) {
-            queryParams.append('page', params.page.toString())
-        }
-
-        if (params?.limit) {
-            queryParams.append('limit', params.limit.toString())
-        }
-
-        if (params?.search) {
-            queryParams.append('search', params.search)
-        }
-
-        // Add role filter for staff only
-        queryParams.append('role', 'STAFF')
-
-        const response = await userAPI.get(`/users?${queryParams}`)
-        return response.data
+        const url = buildUrlWithParams('/users', queryParams);
+        return api.get(url);
     },
 
     /**
@@ -88,14 +74,9 @@ export const staffService = {
         formData.append('role', 'STAFF')
 
         try {
-            const response = await userAPI.post('/users', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-            return response.data
+            return await api.post('/users', formData);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to create staff'
+            const errorMessage = error.message || 'Failed to create staff'
             throw new Error(errorMessage)
         }
     },
@@ -123,14 +104,9 @@ export const staffService = {
         }
 
         try {
-            const response = await userAPI.put(`/users/${id}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-            return response.data
+            return await api.put(`/users/${id}`, formData);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to update staff'
+            const errorMessage = error.message || 'Failed to update staff'
             throw new Error(errorMessage)
         }
     },
@@ -140,10 +116,9 @@ export const staffService = {
      */
     async deleteStaff(id: string): Promise<{ success: boolean; message: string }> {
         try {
-            const response = await userAPI.delete(`/users/${id}`)
-            return response.data
+            return await api.delete(`/users/${id}`);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to delete staff'
+            const errorMessage = error.message || 'Failed to delete staff'
             throw new Error(errorMessage)
         }
     },

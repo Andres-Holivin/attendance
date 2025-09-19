@@ -1,4 +1,4 @@
-import { API, APIUrlEnum } from "@/lib/api";
+import { api, buildUrlWithParams } from "@/lib/proxy-api"
 
 export interface ApiLog {
   id: number;
@@ -51,22 +51,15 @@ export const LoggingService = {
    * Get logs with traditional page-based pagination
    */
   getLogs: async (page = 1, limit = 25, filters?: ApiLogFilters): Promise<PagePaginationResponse> => {
-    const api = API(APIUrlEnum.LOGGING_API);
+    const params = {
+      page: page.toString(),
+      limit: limit.toString(),
+      ...filters,
+    };
 
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
-
-    if (filters?.method) params.append('method', filters.method);
-    if (filters?.status) params.append('status', filters.status.toString());
-    if (filters?.userId) params.append('userId', filters.userId);
-    if (filters?.userEmail) params.append('userEmail', filters.userEmail);
-    if (filters?.sessionId) params.append('sessionId', filters.sessionId);
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-
-    const response = await api.get(`/logs?${params.toString()}`);
-    return response.data.data;
+    const url = buildUrlWithParams('/logs', params);
+    const response = await api.get(url);
+    return response.data;
   },
 
   /**

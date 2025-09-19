@@ -1,5 +1,4 @@
 
-import { API, APIUrlEnum } from "@/lib/api"
 import {
     RegisterData,
     AuthResponse,
@@ -9,15 +8,15 @@ import {
     UserSessionsResponse
 } from "@/types/auth.type"
 import { BaseApiResponse } from "@/types/base-api.type"
+import { api } from "@/lib/proxy-api"
 
 export const AuthService = {
-    // Use direct backend call - no cookies needed for registration
+    // Use proxy for registration
     register: async (data: RegisterData): Promise<BaseApiResponse> => {
-        const response = await API(APIUrlEnum.USER_API).post('/auth/register', data)
-        return response.data
+        return api.post('/auth/register', data);
     },
 
-    // TEMPORARY: Use direct backend call for testing
+    // Use existing local API route for login
     login: async (data: LoginData): Promise<BaseApiResponse<AuthResponse>> => {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
@@ -30,7 +29,7 @@ export const AuthService = {
         return response.json();
     },
 
-    // Use local API route - clears session cookie
+    // Use existing local API route for logout
     logout: async (): Promise<BaseApiResponse<AuthResponse>> => {
         const response = await fetch('/api/auth/logout', {
             method: 'POST',
@@ -42,7 +41,7 @@ export const AuthService = {
         return response.json();
     },
 
-    // TEMPORARY: Use direct backend call for testing
+    // Use existing local API route for me
     me: async (): Promise<BaseApiResponse<AuthResponse>> => {
         const response = await fetch('/api/auth/me', {
             method: 'GET',
@@ -55,45 +54,37 @@ export const AuthService = {
         return response.json();
     },
 
-    // Use direct backend call - cookies are automatically sent by browser
+    // Use proxy for profile
     getProfile: async (): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/profile')
-        return response.data
+        return api.get('/auth/profile');
     },
 
     updateProfile: async (data: UpdateProfileData): Promise<BaseApiResponse<AuthResponse>> => {
-        const formData = new FormData()
+        const formData = new FormData();
 
         // Add form fields
         if (data.phoneNumber) {
-            formData.append('phoneNumber', data.phoneNumber)
+            formData.append('phoneNumber', data.phoneNumber);
         }
         if (data.password) {
-            formData.append('password', data.password)
+            formData.append('password', data.password);
         }
         if (data.confirmPassword) {
-            formData.append('confirmPassword', data.confirmPassword)
+            formData.append('confirmPassword', data.confirmPassword);
         }
         if (data.profileImage) {
-            formData.append('profileImage', data.profileImage)
+            formData.append('profileImage', data.profileImage);
         }
 
-        const response = await API(APIUrlEnum.USER_API).put('/auth/profile', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        })
-        return response.data
+        return api.put('/auth/profile', formData);
     },
 
-    // New session management endpoints
+    // New session management endpoints using proxy
     getSession: async (): Promise<BaseApiResponse<SessionResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/session')
-        return response.data
+        return api.get('/auth/session');
     },
 
     getUserSessions: async (): Promise<BaseApiResponse<UserSessionsResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/sessions')
-        return response.data
+        return api.get('/auth/sessions');
     }
 }

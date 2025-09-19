@@ -354,6 +354,7 @@ export const AuthService = {
                     fullName: user?.fullName,
                     position: user?.position,
                     image_url: user?.image_url,
+                    role: user?.role,
                     phone: user?.phone,
                     createdAt: user?.createdAt,
                     updatedAt: user?.updatedAt,

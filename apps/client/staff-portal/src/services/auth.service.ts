@@ -1,5 +1,5 @@
 
-import { API, APIUrlEnum } from "@/lib/api"
+import { api } from "@/lib/proxy-api"
 import {
     RegisterData,
     AuthResponse,
@@ -11,54 +11,25 @@ import {
 import { BaseApiResponse } from "@/types/base-api.type"
 
 export const AuthService = {
-    // Use direct backend call - no cookies needed for registration
+    // All requests now go through the Next.js proxy
     register: async (data: RegisterData): Promise<BaseApiResponse> => {
-        const response = await API(APIUrlEnum.USER_API).post('/auth/register', data)
-        return response.data
+        return await api.post('/auth/register', data)
     },
 
-    // Use local API route - sets session cookie
     login: async (data: LoginData): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-            credentials: 'include',
-        });
-        return response.json();
+        return await api.post('/auth/login', data)
     },
 
-    // Use local API route - clears session cookie
     logout: async (): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-        });
-        return response.json();
+        return await api.post('/auth/logout')
     },
 
-    // Use local API route - validates session cookie
     me: async (): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await fetch('/api/auth/me', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-        });
-        console.log('me response', response);
-        return response.json();
+        return await api.get('/auth/me')
     },
 
-    // Use direct backend call - cookies are automatically sent by browser
     getProfile: async (): Promise<BaseApiResponse<AuthResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/profile')
-        return response.data
+        return await api.get('/auth/profile')
     },
 
     updateProfile: async (data: UpdateProfileData): Promise<BaseApiResponse<AuthResponse>> => {
@@ -78,22 +49,15 @@ export const AuthService = {
             formData.append('profileImage', data.profileImage)
         }
 
-        const response = await API(APIUrlEnum.USER_API).put('/auth/profile', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        })
-        return response.data
+        return await api.put('/auth/profile', formData)
     },
 
-    // New session management endpoints
+    // Session management endpoints
     getSession: async (): Promise<BaseApiResponse<SessionResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/session')
-        return response.data
+        return await api.get('/auth/session')
     },
 
     getUserSessions: async (): Promise<BaseApiResponse<UserSessionsResponse>> => {
-        const response = await API(APIUrlEnum.USER_API).get('/auth/sessions')
-        return response.data
+        return await api.get('/auth/sessions')
     }
 }

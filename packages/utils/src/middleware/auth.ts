@@ -45,12 +45,12 @@ export const createRemoteAuthMiddleware = (userServiceUrl: string, requiredRole?
 
             if (response.data.success && response.data.user) {
                 // Attach user data to request
-                (req as any).user = response.data.user;
-                (req as any).sessionID = response.data.sessionData?.sessionId;
+                req.user = response.data.user;
+                req.sessionID = response.data.sessionData?.sessionId;
 
                 // Check role authorization if required
                 if (requiredRole) {
-                    const userRole = response.data.user.role as UserRole;
+                    const userRole = response.data.user.role;
                     if (!userRole || userRole !== requiredRole) {
                         res.status(403).json({
                             success: false,

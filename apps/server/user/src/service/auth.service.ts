@@ -1,15 +1,28 @@
 import { prisma } from "../config/database";
 import bcrypt from 'bcryptjs';
 import { NextFunction, Request, Response } from 'express';
-import passport from "passport";
+import passport, { use } from "passport";
 import { PubsubService, PubSubTopics } from "./pub-sub.service";
 import { env } from "@workspace/utils";
+import { handleImageUpload } from "@/lib/image-helper";
+import { Prisma } from '@prisma/user-client';
 
 
 export const AuthService = {
     signUp: async (req: Request, res: Response): Promise<void> => {
         try {
             const { email, fullName, password } = req.body;
+            const appSource = req.appSource;
+            console.log('Registering user for appSource:', appSource);
+            if (appSource !== "admin-portal" && appSource !== "staff-portal") {
+                res.status(403).json({
+                    success: false,
+                    message: 'Forbidden: Invalid application source',
+                    error: 'FORBIDDEN'
+                });
+                return;
+            }
+
 
             // Check if user already exists
             const existingUser = await prisma.user.findFirst({
@@ -34,7 +47,8 @@ export const AuthService = {
                 data: {
                     email: email.toLowerCase(),
                     password: hashedPassword,
-                    fullName: fullName
+                    fullName: fullName,
+                    role: appSource === "staff-portal" ? 'STAFF' : 'ADMIN',
                 },
                 select: {
                     id: true,
@@ -298,18 +312,44 @@ export const AuthService = {
                 });
                 return;
             }
-
+            const appSource = req.appSource;
+            const user = await prisma.user.findUnique({ where: { id: req.user?.id } });
+            if (appSource === "staff-portal" && user?.role !== 'STAFF') {
+                res.status(403).json({
+                    success: false,
+                    message: 'Access denied for staff portal',
+                    error: 'FORBIDDEN'
+                });
+                return;
+            }
+            else if (appSource === "admin-portal" && user?.role !== 'ADMIN') {
+                res.status(403).json({
+                    success: false,
+                    message: 'Access denied for admin portal',
+                    error: 'FORBIDDEN'
+                });
+                return;
+            } else if (appSource !== "admin-portal" && appSource !== "staff-portal") {
+                res.status(403).json({
+                    success: false,
+                    message: 'Forbidden: Invalid application source',
+                    error: 'FORBIDDEN'
+                });
+                return;
+            }
             // Return user data for the attendance service
             res.json({
                 success: true,
                 message: 'Session is valid',
                 user: {
-                    id: req.user.id,
-                    email: req.user.email,
-                    fullName: req.user.fullName,
-                    position: req.user.position,
-                    image_url: req.user.image_url,
-                    phone: req.user.phone
+                    id: user?.id,
+                    email: user?.email,
+                    fullName: user?.fullName,
+                    position: user?.position,
+                    image_url: user?.image_url,
+                    phone: user?.phone,
+                    createdAt: user?.createdAt,
+                    updatedAt: user?.updatedAt,
                 },
                 sessionData: {
                     sessionId: req.sessionID,
@@ -318,12 +358,167 @@ export const AuthService = {
                 }
             });
         } catch (error) {
-            console.error('Session validation error:', error);
+            console.error('Session validation error:', JSON.stringify(error));
             res.status(500).json({
                 success: false,
                 message: 'Internal server error during session validation',
                 error: 'INTERNAL_SERVER_ERROR'
             });
         }
+    },
+    updateProfile: async (req: Request, res: Response): Promise<void> => {
+        try {
+            const appSource = req.appSource;
+            const { password, confirmPassword } = req.body;
+            const userId = req.user!.id;
+            const file = req.file;
+
+            // Check if user exists
+            const existingUser = await prisma.user.findUnique({
+                where: { id: userId },
+            });
+
+            if (!existingUser) {
+                res.status(404).json({
+                    success: false,
+                    message: 'User not found',
+                    error: 'USER_NOT_FOUND',
+                });
+                return;
+            }
+
+            // Validate password confirmation if password is being changed
+            if (password && password !== confirmPassword) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Password confirmation does not match',
+                    error: 'PASSWORD_MISMATCH',
+                });
+                return;
+            }
+
+            // Prepare update data
+            let updateData: Prisma.UserCreateInput = {
+                email: "",
+                password: "",
+                fullName: ""
+            };
+            try {
+                updateData = await _prepareUpdateData(req.body, file, existingUser.image_url || undefined);
+            } catch (uploadError) {
+                console.error('Image upload error:', uploadError);
+                res.status(400).json({
+                    success: false,
+                    message: 'Failed to upload image',
+                    error: 'IMAGE_UPLOAD_FAILED',
+                });
+                return;
+            }
+
+            // Check if there's any data to update
+            if (Object.keys(updateData).length === 0) {
+                res.status(400).json({
+                    success: false,
+                    message: 'No valid fields provided for update',
+                    error: 'NO_UPDATE_DATA',
+                });
+                return;
+            }
+            if (appSource === "staff-portal") {
+                updateData.role = 'STAFF';
+            } else if (appSource === "admin-portal") {
+                updateData.role = 'ADMIN';
+            } else {
+                res.status(403).json({
+                    success: false,
+                    message: 'Forbidden: Invalid application source',
+                    error: 'FORBIDDEN'
+                });
+                return;
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { id: userId },
+                data: updateData,
+                select: {
+                    id: true,
+                    email: true,
+                    fullName: true,
+                    position: true,
+                    image_url: true,
+                    phone: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
+
+            console.log(`✅ Profile updated for user ${updatedUser.email}`);
+
+            res.json({
+                success: true,
+                message: 'Profile updated successfully',
+                data: {
+                    user: updatedUser,
+                    sessionId: req.sessionID,
+                    updatedAt: new Date().toISOString(),
+                },
+            });
+        } catch (error) {
+            console.error('💥 Profile update error:', error);
+
+            // Handle specific Prisma errors
+            if (error instanceof Error && error.message.includes('Unique constraint')) {
+                res.status(409).json({
+                    success: false,
+                    message: 'Profile data conflicts with existing user',
+                    error: 'CONFLICT',
+                });
+                return;
+            }
+
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+                error: 'INTERNAL_SERVER_ERROR',
+            });
+        }
+    },
+    getProfile: async (req: Request, res: Response): Promise<void> => {
+        res.json({
+            success: true,
+            message: 'Profile retrieved successfully',
+            data: {
+                user: req.user,
+                sessionId: req.sessionID,
+                sessionData: {
+                    loginTime: req.session.loginTime,
+                    userAgent: req.session.userAgent,
+                },
+            },
+        });
     }
+}
+
+async function _prepareUpdateData(body: any, file?: Express.Multer.File, existingImageUrl?: string): Promise<any> {
+    const { phoneNumber, password } = body;
+    const updateData: any = {};
+
+    // Handle phone number update
+    if (phoneNumber !== undefined) {
+        updateData.phone = phoneNumber;
+    }
+
+    // Handle password update
+    if (password) {
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        updateData.password = hashedPassword;
+    }
+
+    // Handle image upload to Cloudinary
+    if (file) {
+        updateData.image_url = await handleImageUpload(file, existingImageUrl);
+    }
+
+    return updateData;
 }

@@ -1,12 +1,14 @@
-import { useDailyAttendanceStatsWithFilters } from "@/hooks/useAttendanceWithAtoms";
+import { useCombinedAttendanceStatsWithFilters } from "@/hooks/useAttendanceWithAtoms";
 import { ChartBarInteractive } from "@workspace/ui/components/custom/chart-bar-interactive";
 import { ChartConfig } from "@workspace/ui/components/chart";
 import { useDateRangeFilter } from "@/hooks/useDateRangeFilter";
 
 export default function ChartBarDashboard() {
 
-    const { data: dailyStatsData, isLoading: dailyStatsLoading } = useDailyAttendanceStatsWithFilters();
+    const { data: combinedData, isLoading: dailyStatsLoading } = useCombinedAttendanceStatsWithFilters();
     const { dateRange } = useDateRangeFilter();
+    
+    const dailyStatsData = combinedData ? { data: combinedData.data.daily } : undefined;
     const chartConfig = {
         totalWorkingHours: {
             label: "Total Hours",

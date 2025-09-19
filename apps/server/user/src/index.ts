@@ -4,6 +4,7 @@ import passport from 'passport';
 
 // Import routes
 import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
 import { sessionOptions } from './lib/session';
 import { configurePassport } from './config/passport';
 import {
@@ -15,7 +16,8 @@ import {
   create404Handler,
   createErrorHandler,
   env,
-  helmetOptions
+  helmetOptions,
+  getAppSource
 } from '@workspace/utils';
 import { prisma } from './config/database';
 
@@ -33,6 +35,8 @@ const { limiter, authLimiter } = createRateLimiters(env.API_RATE_LIMIT, env.AUTH
 app.use(limiter);
 app.use(createCorsOptions(env.ALLOWED_ORIGINS))
 
+app.use(getAppSource);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -44,16 +48,14 @@ app.use(createApiLoggingMiddleware('user-service'));
 app.use(sessionOptions);
 
 // Passport middleware
-configurePassport();
+app.use(configurePassport);
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Health check endpoint
-
 
 // API routes
 app.use('/health', createHealthRoute(prisma, env.NODE_ENV));
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/users', authLimiter, userRoutes);
 
 // 404 handler
 app.use('*', create404Handler());

@@ -1,8 +1,9 @@
 
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
-import { useAttendanceStatisticsWithFilters } from "../../hooks/useAttendanceWithAtoms";
+import { useCombinedAttendanceStatsWithFilters } from "../../hooks/useAttendanceWithAtoms";
 export default function StatisticsCard() {
-    const { data: statisticsData } = useAttendanceStatisticsWithFilters();
+    const { data: combinedData } = useCombinedAttendanceStatsWithFilters();
+    const statisticsData = combinedData ? { data: combinedData.data.summary } : undefined;
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-card rounded-lg border p-6">

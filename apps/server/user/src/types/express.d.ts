@@ -14,6 +14,7 @@ declare global {
 
         interface Request {
             user?: User;
+            appSource?: "staff-portal" | "admin-portal"
         }
     }
 }

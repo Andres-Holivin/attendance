@@ -2,51 +2,57 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
 import { prisma } from './database';
+import { NextFunction, Request, Response } from 'express';
 
 // Configure local strategy
-export const configurePassport = () => {
-  passport.use(
-    new LocalStrategy(
-      {
-        usernameField: 'email', // Use email as username field
-        passwordField: 'password',
-      },
-      async (email, password, done) => {
-        console.log('Authenticating user:', email);
-        try {
-          // Find user by email
-          const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() },
-          });
-
-          if (!user) {
-            return done(null, false, { message: 'Invalid email or password' });
-          }
-
-          // Verify password
-          const isPasswordValid = await bcrypt.compare(password, user.password);
-
-          if (!isPasswordValid) {
-            return done(null, false, { message: 'Invalid email or password' });
-          }
-
-          // Return user without password, mapped to Express.User interface
-          const mappedUser: Express.User = {
-            id: user.id,
-            email: user.email,
-            fullName: user.fullName,
-            position: user.position,
-            image_url: user.image_url,
-            phone: user.phone,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-          };
-          return done(null, mappedUser);
-        } catch (error) {
-          return done(error);
+export const configurePassport = (req: Request, res: Response, next: NextFunction) => {
+  console.log("Configuring passport middleware");
+  passport.use(new LocalStrategy({ usernameField: 'email', passwordField: 'password', },
+    async (email, password, done) => {
+      console.log("Configuring passport for appSource:", req.appSource);
+      try {
+        // Find user by email
+        if (!req.appSource) {
+          return done(null, false, { message: 'Invalid application source' });
         }
+        const user = await prisma.user.findUnique({
+          where: { email: email.toLowerCase() },
+        });
+
+        if (!user) {
+          return done(null, false, { message: 'Invalid email or password' });
+        }
+
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+          return done(null, false, { message: 'Invalid email or password' });
+        }
+
+        if (req.appSource === 'staff-portal' && user.role !== 'STAFF') {
+          return done(null, false, { message: 'Staff cannot log in via Staff Portal' });
+        } else if (req.appSource === 'admin-portal' && user.role !== 'ADMIN') {
+          return done(null, false, { message: 'Only Admins can log in via Admin Portal' });
+        }
+
+        // Return user without password, mapped to Express.User interface
+        const mappedUser: Express.User = {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          position: user.position,
+          image_url: user.image_url,
+          phone: user.phone,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        };
+        return done(null, mappedUser);
+      } catch (error) {
+        return done(error);
       }
-    )
+    }
+  )
   );
 
   // Serialize user for session
@@ -92,4 +98,5 @@ export const configurePassport = () => {
       done(error);
     }
   });
+  next();
 }

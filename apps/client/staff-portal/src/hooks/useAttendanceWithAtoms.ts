@@ -6,8 +6,7 @@ import { attendanceFiltersAtom, dateRangeAtom, paginationAtom, setDateRangeAtom,
 export const ATTENDANCE_KEYS = {
     todayAttendance: (userId?: string) => ['today-attendance', userId],
     attendanceRecords: (filters: any) => ['attendance-records', filters],
-    attendanceStatistics: (filters?: { startDate?: string; endDate?: string }) => ['attendance-statistics', filters],
-    dailyStats: (filters?: { days?: number; startDate?: string; endDate?: string }) => ['daily-attendance-stats', filters],
+    combinedStats: (filters?: { days?: number; startDate?: string; endDate?: string }) => ['combined-attendance-stats', filters],
 }
 
 // Enhanced hooks with Jotai integration
@@ -38,8 +37,7 @@ export function useCheckIn() {
         onSuccess: () => {
             // Invalidate and refetch attendance data
             queryClient.invalidateQueries({ queryKey: ['today-attendance'] });
-            queryClient.invalidateQueries({ queryKey: ['attendance-statistics'] });
-            queryClient.invalidateQueries({ queryKey: ['daily-attendance-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['combined-attendance-stats'] });
             queryClient.invalidateQueries({ queryKey: ['attendance-records'] });
         },
     })
@@ -53,8 +51,7 @@ export function useCheckOut() {
         onSuccess: () => {
             // Invalidate and refetch attendance data
             queryClient.invalidateQueries({ queryKey: ['today-attendance'] });
-            queryClient.invalidateQueries({ queryKey: ['attendance-statistics'] });
-            queryClient.invalidateQueries({ queryKey: ['daily-attendance-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['combined-attendance-stats'] });
             queryClient.invalidateQueries({ queryKey: ['attendance-records'] });
         },
     })
@@ -77,23 +74,13 @@ export function useAttendanceRecordsWithFilters() {
     })
 }
 
-export function useAttendanceStatisticsWithFilters() {
+export function useCombinedAttendanceStatsWithFilters() {
     const dateRange = useAtomValue(dateRangeAtom);
 
     return useQuery({
-        queryKey: ATTENDANCE_KEYS.attendanceStatistics(dateRange),
-        queryFn: () => AttendanceService.getAttendanceStatistics(dateRange),
+        queryKey: ATTENDANCE_KEYS.combinedStats(dateRange),
+        queryFn: () => AttendanceService.getCombinedStats(dateRange),
         refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-    })
-}
-
-export function useDailyAttendanceStatsWithFilters() {
-    const dateRange = useAtomValue(dateRangeAtom);
-
-    return useQuery({
-        queryKey: ATTENDANCE_KEYS.dailyStats(dateRange),
-        queryFn: () => AttendanceService.getDailyAttendanceStats(dateRange),
-        refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
     })
 }
 
@@ -106,18 +93,10 @@ export function useAttendanceRecords(filters: any = {}) {
     })
 }
 
-export function useAttendanceStatistics(filters?: { startDate?: string; endDate?: string }) {
+export function useCombinedAttendanceStats(filters?: { days?: number; startDate?: string; endDate?: string }) {
     return useQuery({
-        queryKey: ATTENDANCE_KEYS.attendanceStatistics(filters),
-        queryFn: () => AttendanceService.getAttendanceStatistics(filters),
+        queryKey: ATTENDANCE_KEYS.combinedStats(filters),
+        queryFn: () => AttendanceService.getCombinedStats(filters),
         refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-    })
-}
-
-export function useDailyAttendanceStats(filters?: { days?: number; startDate?: string; endDate?: string }) {
-    return useQuery({
-        queryKey: ATTENDANCE_KEYS.dailyStats(filters),
-        queryFn: () => AttendanceService.getDailyAttendanceStats(filters),
-        refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
     })
 }

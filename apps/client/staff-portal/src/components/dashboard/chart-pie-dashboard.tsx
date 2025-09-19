@@ -1,12 +1,14 @@
 import { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartPieLegend } from "@workspace/ui/components/custom/chart-pie-legend";
-import { useAttendanceStatisticsWithFilters } from "@/hooks/useAttendanceWithAtoms";
+import { useCombinedAttendanceStatsWithFilters } from "@/hooks/useAttendanceWithAtoms";
 import { useDateRangeFilter } from "@/hooks/useDateRangeFilter";
 
 
 export default function ChartPieDashboard() {
-    const { data: statisticsData, isLoading: statsLoading } = useAttendanceStatisticsWithFilters();
+    const { data: combinedData, isLoading: statsLoading } = useCombinedAttendanceStatsWithFilters();
     const { dateRange } = useDateRangeFilter();
+
+    const statisticsData = combinedData ? { data: combinedData.data.summary } : undefined;
 
     const chartConfig = {
         attendance: {

@@ -16,12 +16,7 @@ const getAttendanceValidation = [
     query('endDate').optional().isISO8601().withMessage('Valid end date is required'),
 ];
 
-const getStatisticsValidation = [
-    query('startDate').optional().isISO8601().withMessage('Valid start date is required'),
-    query('endDate').optional().isISO8601().withMessage('Valid end date is required'),
-];
-
-const getDailyStatsValidation = [
+const getStatsValidation = [
     query('days').optional().isInt({ min: 1, max: 365 }).withMessage('Days must be between 1 and 365'),
     query('startDate').optional().isISO8601().withMessage('Valid start date is required'),
     query('endDate').optional().isISO8601().withMessage('Valid end date is required'),
@@ -38,16 +33,24 @@ const todayAttendanceValidation = z.object({
 router.get('/', requireAuth, getAttendanceValidation, AttendanceService.getAttendanceRecords);
 
 /**
- * GET /api/attendance/statistics
- * Get attendance statistics for a date range
+ * GET /api/attendance/stats
+ * Get combined attendance statistics - returns both summary and daily breakdown data
+ * Query params:
+ * - startDate: ISO date string (optional)
+ * - endDate: ISO date string (optional) 
+ * - days: number (optional, used when no date range specified, defaults to 14)
+ * 
+ * Response format:
+ * {
+ *   success: true,
+ *   message: string,
+ *   data: {
+ *     summary: AttendanceStatistics,
+ *     daily: DailyAttendanceStats[]
+ *   }
+ * }
  */
-router.get('/statistics', requireAuth, getStatisticsValidation, AttendanceService.getAttendanceStatistics);
-
-/**
- * GET /api/attendance/daily-stats
- * Get daily attendance statistics for a date range or last N days
- */
-router.get('/daily-stats', requireAuth, getDailyStatsValidation, AttendanceService.getDailyAttendanceStats);
+router.get('/stats', requireAuth, getStatsValidation, AttendanceService.getStats);
 
 /**
  * GET /api/attendance/today

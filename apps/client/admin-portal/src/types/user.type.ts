@@ -4,6 +4,7 @@ export interface User {
     fullName: string
     position?: string | null
     image_url?: string | null
+    role?: string
     phone?: string | null
     createdAt?: string
     updatedAt?: string

@@ -31,6 +31,7 @@ export function API(url: APIUrlEnum) {
         withCredentials: true, // 🔑 important for cookies
         headers: {
             "Content-Type": "application/json",
+            "X-App-Signature": "staff-portal"
         },
     });
     return api;

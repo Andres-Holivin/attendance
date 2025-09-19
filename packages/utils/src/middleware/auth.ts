@@ -1,21 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 
-// Common auth middleware for services that need to validate user sessions
-export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
-    if (req.isAuthenticated?.()) {
-        return next();
-    }
+type UserRole = 'ADMIN' | 'STAFF';
 
-    res.status(401).json({
-        success: false,
-        message: 'Authentication required',
-        error: 'UNAUTHORIZED'
-    });
-};
-
-// Auth middleware for services that need to validate session with user service
-export const createRemoteAuthMiddleware = (userServiceUrl: string) => {
+/**
+ * Creates a remote authentication middleware that validates sessions with the user service
+ * @param userServiceUrl - The URL of the user service for session validation
+ * @param requiredRole - Optional role requirement (ADMIN or STAFF). If not provided, any authenticated user can access
+ * @returns Express middleware function
+ * 
+ * @example
+ * // Authentication only (any logged-in user)
+ * const requireAuth = createRemoteAuthMiddleware(env.USER_SERVICE_URL);
+ * 
+ * // Admin authorization required
+ * const requireAdmin = createRemoteAuthMiddleware(env.USER_SERVICE_URL, 'ADMIN');
+ * 
+ * // Staff authorization required
+ * const requireStaff = createRemoteAuthMiddleware(env.USER_SERVICE_URL, 'STAFF');
+ */
+export const createRemoteAuthMiddleware = (userServiceUrl: string, requiredRole?: UserRole) => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             // Extract session cookie from request
@@ -33,7 +37,8 @@ export const createRemoteAuthMiddleware = (userServiceUrl: string) => {
             // Validate session with user service
             const response = await axios.get(`${userServiceUrl}/api/auth/validate`, {
                 headers: {
-                    cookie: sessionCookie
+                    cookie: sessionCookie,
+                    "x-app-signature": req.appSource
                 }
             });
 
@@ -41,6 +46,20 @@ export const createRemoteAuthMiddleware = (userServiceUrl: string) => {
                 // Attach user data to request
                 (req as any).user = response.data.user;
                 (req as any).sessionID = response.data.sessionData?.sessionId;
+
+                // Check role authorization if required
+                if (requiredRole) {
+                    const userRole = response.data.user.role as UserRole;
+                    if (!userRole || userRole !== requiredRole) {
+                        res.status(403).json({
+                            success: false,
+                            message: `Access denied. Required role: ${requiredRole}`,
+                            error: 'FORBIDDEN'
+                        });
+                        return;
+                    }
+                }
+
                 next();
             } else {
                 res.status(401).json({

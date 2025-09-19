@@ -26,6 +26,11 @@ export interface DailyAttendanceStats {
     totalWorkingHours: number;
 }
 
+export interface CombinedAttendanceStats {
+    summary: AttendanceStatistics;
+    daily: DailyAttendanceStats[];
+}
+
 export interface AttendanceFilters {
     userId?: string;
     startDate?: string;

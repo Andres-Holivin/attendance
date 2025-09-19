@@ -1,14 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { createRemoteAuthMiddleware, env } from '@workspace/utils';
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+// Regular authentication middleware (no role requirement)
+export const requireAuth = createRemoteAuthMiddleware(env.USER_SERVICE_URL);
 
-  if (req.isAuthenticated()) {
-    return next();
-  }
+// Admin-only authentication middleware
+export const requireAdmin = createRemoteAuthMiddleware(env.USER_SERVICE_URL, 'ADMIN');
 
-  res.status(401).json({
-    success: false,
-    message: 'Authentication required',
-    error: 'UNAUTHORIZED'
-  });
-};
+// Staff-only authentication middleware (example for other services)
+export const requireStaff = createRemoteAuthMiddleware(env.USER_SERVICE_URL, 'STAFF');

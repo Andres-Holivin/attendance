@@ -10,7 +10,8 @@ import {
   createErrorHandler,
   env,
   helmetOptions,
-  createApiLoggingMiddleware
+  createApiLoggingMiddleware,
+  getAppSource
 } from '@workspace/utils';
 import { prisma } from './config/database';
 import { PubsubService, PubSubSubscriptions } from './service/pub-sub.service';
@@ -31,6 +32,7 @@ app.use(helmetOptions);
 app.use(createCorsOptions(env.ALLOWED_ORIGINS))
 app.use(limiter);
 
+app.use(getAppSource);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

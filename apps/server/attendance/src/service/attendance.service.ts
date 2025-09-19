@@ -59,92 +59,19 @@ export class AttendanceService {
         }
     }
 
-    static async getAttendanceStatistics(req: any, res: any): Promise<void> {
-        try {
-            const { startDate, endDate } = req.query;
-
-            // Default to today if no dates provided
-            let filterStartDate = new Date();
-            let filterEndDate = new Date();
-
-            if (startDate) {
-                filterStartDate = new Date(startDate);
-            }
-            if (endDate) {
-                filterEndDate = new Date(endDate);
-            }
-
-            // Set time boundaries for the day
-            filterStartDate = moment.utc(filterStartDate).startOf('day').toDate();
-            filterEndDate = moment.utc(filterEndDate).endOf('day').toDate();
-
-            console.log('Filtering statistics from', filterStartDate, 'to', filterEndDate);
-
-            // Get all users count
-            const totalEmployees = await prisma.user.count();
-
-            // Get attendance records for the date range
-            const attendanceRecords = await prisma.attendance.findMany({
-                where: {
-                    dateIn: {
-                        gte: filterStartDate,
-                        lte: filterEndDate,
-                    }
-                },
-                include: {
-                    user: true
-                }
-            });
-
-            const presentInRange = attendanceRecords.length;
-            const absentInRange = totalEmployees - presentInRange;
-
-            // Calculate late arrivals (assuming work starts at 9 AM)
-            const lateInRange = attendanceRecords.filter(attendance => {
-                const checkInDate = new Date(attendance.dateIn);
-                const workStartTime = new Date(checkInDate);
-                workStartTime.setHours(9, 0, 0, 0);
-                return checkInDate > workStartTime;
-            }).length;
-
-            const onTimeInRange = presentInRange - lateInRange;
-
-            const statistics = {
-                totalEmployees,
-                presentToday: presentInRange,
-                absentToday: absentInRange,
-                lateToday: lateInRange,
-                onTimeToday: onTimeInRange,
-            };
-
-            res.json({
-                success: true,
-                message: 'Attendance statistics retrieved successfully',
-                data: statistics,
-            });
-        } catch (error: any) {
-            console.error('Error getting attendance statistics:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to get attendance statistics',
-                error: 'INTERNAL_SERVER_ERROR',
-            });
-        }
-    }
-
-    static async getDailyAttendanceStats(req: any, res: any): Promise<void> {
+    static async getStats(req: any, res: any): Promise<void> {
         try {
             const { days, startDate, endDate } = req.query;
 
+            // Determine date range
             let filterStartDate: Date;
             let filterEndDate: Date;
 
-            // If specific date range is provided, use it
             if (startDate && endDate) {
                 filterStartDate = new Date(startDate);
                 filterEndDate = new Date(endDate);
             } else {
-                // Otherwise, use the days parameter (default 14)
+                // Use days parameter (default 14) or default to today for summary
                 const daysCount = parseInt(days) || 14;
                 filterEndDate = new Date();
                 filterStartDate = new Date();
@@ -156,7 +83,10 @@ export class AttendanceService {
 
             console.log('Filtering statistics from', filterStartDate, 'to', filterEndDate);
 
-            // Get attendance records for the date range with dateOut
+            // Get total employees count
+            const totalEmployees = await prisma.user.count();
+
+            // Get attendance records for the date range
             const attendanceRecords = await prisma.attendance.findMany({
                 where: {
                     dateIn: {
@@ -167,15 +97,38 @@ export class AttendanceService {
                 select: {
                     dateIn: true,
                     dateOut: true,
+                    user: {
+                        select: {
+                            id: true,
+                        }
+                    },
                 }
             });
 
-            // Calculate the number of days between start and end
-            const daysDiff = Math.ceil((filterEndDate.getTime() - filterStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            // Calculate summary statistics for the entire date range
+            const presentInRange = attendanceRecords.length;
+            const absentInRange = totalEmployees - presentInRange;
 
-            // Group by date and calculate stats
+            const lateInRange = attendanceRecords.filter(attendance => {
+                const checkInDate = new Date(attendance.dateIn);
+                const workStartTime = new Date(checkInDate);
+                workStartTime.setHours(9, 0, 0, 0);
+                return checkInDate > workStartTime;
+            }).length;
+
+            const onTimeInRange = presentInRange - lateInRange;
+
+            const summaryStatistics = {
+                totalEmployees,
+                presentToday: presentInRange,
+                absentToday: absentInRange,
+                lateToday: lateInRange,
+                onTimeToday: onTimeInRange,
+            };
+
+            // Calculate daily breakdown statistics
+            const daysDiff = Math.ceil((filterEndDate.getTime() - filterStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
             const dailyStats = [];
-            const workStartTime = 9; // 9 AM
 
             for (let i = 0; i < daysDiff; i++) {
                 const currentDate = new Date(filterStartDate);
@@ -190,12 +143,6 @@ export class AttendanceService {
                     const recordDate = new Date(record.dateIn);
                     return recordDate >= dayStart && recordDate <= dayEnd;
                 });
-
-                const present = dayAttendance.length;
-
-                // Calculate late arrivals
-                const workStart = new Date(currentDate);
-                workStart.setHours(workStartTime, 0, 0, 0);
 
                 // Calculate working hours for this day
                 const workingHours = dayAttendance.reduce((totalHours, record) => {
@@ -214,16 +161,21 @@ export class AttendanceService {
                 });
             }
 
+            // Return both summary and daily statistics in a single response
             res.json({
                 success: true,
-                message: 'Daily attendance statistics retrieved successfully',
-                data: dailyStats,
+                message: 'Attendance statistics retrieved successfully',
+                data: {
+                    summary: summaryStatistics,
+                    daily: dailyStats,
+                },
             });
+
         } catch (error: any) {
-            console.error('Error getting daily attendance statistics:', error);
+            console.error('Error getting attendance stats:', error);
             res.status(500).json({
                 success: false,
-                message: error.message || 'Failed to get daily attendance statistics',
+                message: error.message || 'Failed to get attendance stats',
                 error: 'INTERNAL_SERVER_ERROR',
             });
         }

@@ -15,6 +15,7 @@ async function GetSessionAuth(req: NextRequest): Promise<boolean> {
             headers: {
                 'Content-Type': 'application/json',
                 'Cookie': cookies,
+                'x-app-signature': "staff-portal"
             },
             signal: controller.signal,
         });

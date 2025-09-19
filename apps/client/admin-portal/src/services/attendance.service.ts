@@ -1,7 +1,7 @@
 
 import { API, APIUrlEnum } from "@/lib/api"
 import { BaseApiResponse } from "@/types/base-api.type"
-import { AttendanceFilters, AttendancePaginatedResponse, AttendanceStatistics, DailyAttendanceStats } from "@/types/attendance.type"
+import { AttendanceFilters, AttendancePaginatedResponse, CombinedAttendanceStats } from "@/types/attendance.type"
 
 export const AttendanceService = {
     checkIn: async (): Promise<BaseApiResponse> => {
@@ -32,18 +32,7 @@ export const AttendanceService = {
         const response = await API(APIUrlEnum.ATTENDANCE_API).get(url)
         return response.data
     },
-    getAttendanceStatistics: async (filters?: { startDate?: string; endDate?: string }): Promise<BaseApiResponse & { data: AttendanceStatistics }> => {
-        const params = new URLSearchParams()
-
-        if (filters?.startDate) params.append('startDate', filters.startDate)
-        if (filters?.endDate) params.append('endDate', filters.endDate)
-
-        const queryString = params.toString()
-        const url = queryString ? `/attendance/statistics?${queryString}` : '/attendance/statistics'
-        const response = await API(APIUrlEnum.ATTENDANCE_API).get(url)
-        return response.data
-    },
-    getDailyAttendanceStats: async (filters?: { days?: number; startDate?: string; endDate?: string }): Promise<BaseApiResponse & { data: DailyAttendanceStats[] }> => {
+    getCombinedStats: async (filters?: { days?: number; startDate?: string; endDate?: string }): Promise<BaseApiResponse & { data: CombinedAttendanceStats }> => {
         const params = new URLSearchParams()
 
         if (filters?.days) params.append('days', filters.days.toString())
@@ -51,7 +40,7 @@ export const AttendanceService = {
         if (filters?.endDate) params.append('endDate', filters.endDate)
 
         const queryString = params.toString()
-        const url = queryString ? `/attendance/daily-stats?${queryString}` : '/attendance/daily-stats'
+        const url = queryString ? `/attendance/stats?${queryString}` : '/attendance/stats'
         const response = await API(APIUrlEnum.ATTENDANCE_API).get(url)
         return response.data
     }

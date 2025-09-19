@@ -9,7 +9,8 @@ import {
   create404Handler,
   createErrorHandler,
   env,
-  createHealthRoute
+  createHealthRoute,
+  getAppSource
 } from '@workspace/utils';
 
 // Import routes
@@ -41,6 +42,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API logging middleware - add after body parsing but before routes
 app.use(createApiLoggingMiddleware('attendance-service'));
 
+app.use(getAppSource);
 // API routes
 app.use('/health', createHealthRoute(prisma, env.NODE_ENV));
 app.use('/api/attendance', attendanceRoutes);

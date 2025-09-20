@@ -2,8 +2,8 @@
 
 
 ## WEB APPLICATION DEPLOY USINNG VERCEL
-- [Admin Portal] (https://attendance-admin-portal.vercel.app)
-- [Staff Portal] (https://attendance-staff-portal.vercel.app)
+- [Admin Portal] (https://attendance-admin-portal.vercel.app) Default Login: admin@admin.com password: adminadmin
+- [Staff Portal] (https://attendance-staff-portal.vercel.app) Default Login: user@gmail.com  password: useruser
 
 
 A comprehensive attendance tracking system built with a microservices architecture using Turborepo monorepo structure.

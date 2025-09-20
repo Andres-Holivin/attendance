@@ -1,10 +1,10 @@
 # Attendance Management System
 
-```
-WEB APPLICATION DEPLOY USINNG VERCEL
-- https://attendance-admin-portal.vercel.app
-- https://attendance-staff-portal.vercel.app
-```
+
+## WEB APPLICATION DEPLOY USINNG VERCEL
+- [Admin Portal] (https://attendance-admin-portal.vercel.app)
+- [Staff Portal] (https://attendance-staff-portal.vercel.app)
+
 
 A comprehensive attendance tracking system built with a microservices architecture using Turborepo monorepo structure.
 
